@@ -1,23 +1,19 @@
 <!DOCTYPE html>
 <html lang="cs" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kvíz - Test</title>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kvíz</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
+    <select id="quizSelect" style="width: auto; margin: 0;"></select>
     <nav class="nav">
       <a href="index.html" class="active">Test</a>
       <a href="admin.html">Správa</a>
     </nav>
-    <div class="select-container">
-      <select id="quizSelect"></select>
-    </div>
-    <button id="themeBtn" class="btn" style="position:absolute; right:20px; top:25px;">🌙</button>
+    <button id="themeBtn" class="btn">🌙</button>
   </header>
-
   <main class="container">
     <div id="quiz"></div>
     <button id="restartBtn" class="btn primary xl hidden">Zkusit znovu</button>
