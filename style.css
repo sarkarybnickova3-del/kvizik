@@ -1,58 +1,160 @@
+/* Globální proměnné a barvy */
 :root {
-  --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8;
-  --border: #334155; --primary: #3b82f6; --ok: #22c55e; --bad: #ef4444;
+  --radius: 18px;
+  --bg: #0b0f19;
+  --card: #121a2a;
+  --text: #e8eefc;
+  --muted: #a9b4d6;
+  --border: #22304a;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --ok: #2eaf5d;
+  --bad: #e24b4b;
 }
+
 html[data-theme="light"] {
-  --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --muted: #64748b;
-  --border: #cbd5e1; --primary: #2563eb;
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #4b5563;
+  --border: #e5e7eb;
 }
 
-body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.5; }
-.container { max-width: 850px; margin: 0 auto; padding: 20px; }
+body { 
+  font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+  background: var(--bg); 
+  color: var(--text); 
+  margin: 0; 
+  line-height: 1.6; 
+}
 
-/* Topbar */
-.topbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: var(--card); border-bottom: 2px solid var(--border); }
-.select-container { display: flex; align-items: center; gap: 10px; background: var(--bg); padding: 5px 15px; border-radius: 10px; border: 1px solid var(--border); }
-.sel-label { font-size: 0.8rem; font-weight: bold; color: var(--primary); }
-#quizSelect { border: none; background: transparent; color: var(--text); font-weight: bold; cursor: pointer; font-size: 1rem; }
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
 
-/* Step Cards */
-.step-card { background: var(--card); border-radius: 16px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border); }
-.step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-.step-num { background: var(--primary); color: white; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; font-size: 1.2rem; }
-.step-card h2 { margin: 0; font-size: 1.4rem; }
+/* --- HORNÍ LIŠTA A NAVIGACE --- */
+.topbar { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 15px 30px; 
+  background: var(--card); 
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
 
-/* Form Elements */
-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--muted); font-size: 0.9rem; }
-input, select { background: rgba(0,0,0,0.2); border: 2px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; font-size: 1rem; }
-.large-input { font-size: 1.2rem; border-color: var(--primary); }
-.btn { border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
-.btn.primary { background: var(--primary); color: white; }
-.btn.primary:hover { opacity: 0.9; transform: scale(1.02); }
-.btn.danger { background: #7f1d1d; color: white; }
-.btn.xl { padding: 18px; font-size: 1.2rem; width: 100%; }
+.nav { 
+  display: flex; 
+  background: var(--bg); 
+  padding: 4px; 
+  border-radius: 12px; 
+  border: 1px solid var(--border);
+}
 
-/* Quiz Styles - ČITELNOST */
-.quiz-q-title { font-size: 1.8rem; margin-bottom: 25px; text-align: center; line-height: 1.3; }
-.answers-grid.big-grid { grid-template-columns: 1fr; gap: 15px; }
-.answer-btn.big-btn { padding: 20px; font-size: 1.3rem; border: 3px solid var(--border); background: var(--bg); }
+.nav a { 
+  text-decoration: none; 
+  color: var(--muted); 
+  padding: 8px 20px; 
+  border-radius: 10px; 
+  font-weight: 600; 
+  transition: 0.3s;
+  font-size: 0.95rem;
+}
+
+.nav a.active { 
+  background: var(--card); 
+  color: var(--primary); 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.nav a:hover:not(.active) { color: var(--text); }
+
+/* --- KARTY A BLOKY --- */
+.card { 
+  background: var(--card); 
+  border-radius: var(--radius); 
+  padding: 30px; 
+  border: 1px solid var(--border); 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.step-card { 
+  background: var(--card); 
+  border-radius: var(--radius); 
+  padding: 25px; 
+  margin-bottom: 25px; 
+  border: 1px solid var(--border); 
+}
+
+/* --- VELKÝ TEST (Zvětšení písmen) --- */
+.quiz-q-title { 
+  font-size: 2.2rem; /* Obří otázka */
+  font-weight: 800; 
+  margin-bottom: 30px; 
+  text-align: center;
+  line-height: 1.2;
+}
+
+.answers-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+
+.answer-btn { 
+  display: flex; 
+  align-items: center; 
+  padding: 20px 25px; 
+  font-size: 1.4rem; /* Velký text odpovědí */
+  background: rgba(255,255,255,0.03); 
+  border: 2px solid var(--border); 
+  border-radius: 15px; 
+  color: var(--text); 
+  cursor: pointer; 
+  transition: 0.2s;
+  text-align: left;
+}
+
 .answer-btn .letter { 
-  background: #334155; color: white; width: 45px; height: 45px; 
-  font-size: 1.4rem; border-radius: 8px; margin-right: 20px;
+  background: var(--border); 
+  width: 45px; 
+  height: 45px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  border-radius: 10px; 
+  margin-right: 20px; 
+  font-weight: 800;
+  font-size: 1.4rem;
+  flex-shrink: 0;
 }
+
+.answer-btn:hover { border-color: var(--muted); transform: translateY(-2px); }
 .answer-btn.selected { border-color: var(--primary); background: rgba(59,130,246,0.1); }
-.answer-btn.correct { border-color: var(--ok); background: rgba(34,197,94,0.1); }
-.answer-btn.wrong { border-color: var(--bad); background: rgba(239,68,68,0.1); }
+.answer-btn.selected .letter { background: var(--primary); color: white; }
 
-/* Input Answer */
-.quiz-input.big-input { font-size: 1.5rem; padding: 20px; text-align: center; }
+.answer-btn.correct { border-color: var(--ok); background: rgba(46,175,93,0.15); }
+.answer-btn.wrong { border-color: var(--bad); background: rgba(226,75,75,0.15); }
 
-/* Next Button Animation */
-.btn-next { animation: pulse 1.5s infinite; background: var(--ok) !important; margin-top: 10px; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+/* --- OSTATNÍ PRVKY --- */
+.btn { 
+  padding: 12px 25px; 
+  border-radius: 12px; 
+  border: none; 
+  cursor: pointer; 
+  font-weight: 700; 
+  transition: 0.2s;
+}
+.btn.primary { background: var(--primary); color: white; }
+.btn.xl { width: 100%; padding: 20px; font-size: 1.3rem; margin-top: 20px; }
 
-/* Utils */
+.quiz-input.big-input { 
+  width: 100%; 
+  padding: 20px; 
+  font-size: 1.8rem; 
+  text-align: center; 
+  background: rgba(0,0,0,0.2); 
+  border: 3px solid var(--border); 
+  border-radius: 15px; 
+  color: var(--text);
+}
+
 .hidden { display: none !important; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.spacer { border: 0; border-top: 2px solid var(--border); margin: 25px 0; }
-.admin-list .item { background: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+
+/* Admin UI prvky */
+.step-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.step-num { background: var(--primary); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
