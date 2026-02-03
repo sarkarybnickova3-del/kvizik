@@ -1,309 +1,177 @@
-// app.js — Test (spolehlivé vyhodnocení)
-// Podpora: choice (i více správných), text (více variant)
+// app.js — finální logika
+// - text pod otázkou: jedna / více správných odpovědí
+// - vždy tlačítko Vyhodnotit + Další
+// - statistika na konci (počítá i opravná kola)
 
 const STORE_KEY = "kvizik_v2";
 
 function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
-function escapeHtml(str){
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-function normalizeAnswer(s){ return String(s ?? "").trim().toLowerCase(); }
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#039;" }[m]));}
+function norm(s){return String(s??"").trim().toLowerCase();}
 
 function loadState(){
-  const raw = localStorage.getItem(STORE_KEY);
   try{
-    const parsed = raw ? JSON.parse(raw) : null;
-    if (parsed && typeof parsed === "object" && parsed.tests) return parsed;
+    const s=JSON.parse(localStorage.getItem(STORE_KEY));
+    if(s&&s.tests) return s;
   }catch{}
-  const id = uid();
-  const state = { theme:"dark", activeTestId:id, tests:{ [id]:{ id, name:"Můj test", questions:[] } } };
-  localStorage.setItem(STORE_KEY, JSON.stringify(state));
-  return state;
+  const id=uid();
+  const s={theme:"dark",activeTestId:id,tests:{[id]:{id,name:"Můj test",questions:[]}}};
+  localStorage.setItem(STORE_KEY,JSON.stringify(s));
+  return s;
 }
-function saveState(state){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
-function setTheme(theme){ document.documentElement.setAttribute("data-theme", theme || "dark"); }
+function saveState(s){localStorage.setItem(STORE_KEY,JSON.stringify(s));}
+function setTheme(t){document.documentElement.setAttribute("data-theme",t||"dark");}
 
-function shuffle(arr){
-  for (let i = arr.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-function setsEqual(a,b){
-  if (a.size !== b.size) return false;
-  for (const x of a) if (!b.has(x)) return false;
-  return true;
-}
+const quizSelect=document.getElementById("quizSelect");
+const themeBtn=document.getElementById("themeBtn");
+const quizRoot=document.getElementById("quiz");
+const restartBtn=document.getElementById("restartBtn");
 
-const quizSelect = document.getElementById("quizSelect");
-const themeBtn = document.getElementById("themeBtn");
-const quizRoot = document.getElementById("quiz");
-const restartBtn = document.getElementById("restartBtn");
+let state=loadState(); setTheme(state.theme);
 
-let state = loadState();
-setTheme(state.theme);
+let pool=[],wrong=[],idx=0,locked=false;
+let total=0, correct=0;
 
-let pool = [];
-let wrongQueue = [];
-let idx = 0;
-let locked = false;
-let autoTimer = null;
-
-function getActiveTest(){ return state.tests[state.activeTestId]; }
+function getTest(){return state.tests[state.activeTestId];}
 
 function renderSelect(){
-  quizSelect.innerHTML = "";
-  const tests = Object.values(state.tests).sort((a,b)=>a.name.localeCompare(b.name,"cs"));
-  for (const t of tests){
-    const opt = document.createElement("option");
-    opt.value = t.id;
-    opt.textContent = t.name;
-    quizSelect.appendChild(opt);
-  }
-  quizSelect.value = state.activeTestId;
+  quizSelect.innerHTML="";
+  Object.values(state.tests).forEach(t=>{
+    const o=document.createElement("option");
+    o.value=t.id;o.textContent=t.name;
+    quizSelect.appendChild(o);
+  });
+  quizSelect.value=state.activeTestId;
 }
 
-function loadPool(){
-  const t = getActiveTest();
-  pool = shuffle([...(t.questions || [])]);
-  wrongQueue = [];
-  idx = 0;
-  locked = false;
-  clearTimeout(autoTimer);
+function start(){
+  const t=getTest();
+  pool=[...t.questions];
+  wrong=[];
+  idx=0;
+  total=0;
+  correct=0;
+  next();
 }
 
-function ensureHasQuestions(){
-  const t = getActiveTest();
-  if (!t || !t.questions || t.questions.length === 0){
-    quizRoot.innerHTML = `
-      <h2 class="quiz-title">V testu „${escapeHtml(t?.name || "—")}“ nejsou otázky</h2>
-      <p class="quiz-sub">Přidej je ve Správě.</p>
-      <div class="note">Otevři <a href="admin.html">Správu</a> a přidej otázky.</div>
-    `;
-    restartBtn.disabled = true;
-    return false;
-  }
-  restartBtn.disabled = false;
-  return true;
-}
+function next(){
+  quizRoot.innerHTML="";
+  locked=false;
 
-function autoAdvance(isWrong){
-  if (isWrong) wrongQueue.push(pool[idx]);
-  clearTimeout(autoTimer);
-  autoTimer = setTimeout(() => {
-    idx++;
-    renderQuestion();
-  }, 650);
-}
-
-function renderQuestion(){
-  if (!ensureHasQuestions()) return;
-
-  locked = false;
-  quizRoot.innerHTML = "";
-
-  if (idx >= pool.length){
-    if (wrongQueue.length > 0){
-      pool = shuffle([...wrongQueue]);
-      wrongQueue = [];
-      idx = 0;
-      alert("Opakují se otázky, které byly špatně.");
-    } else {
-      quizRoot.innerHTML = `
-        <h2 class="quiz-title">🎉 Hotovo!</h2>
-        <p class="quiz-sub">Všechny otázky byly zodpovězeny správně.</p>
-        <div class="note">Můžeš dát Restart nebo přepnout test v horním menu.</div>
-      `;
-      locked = true;
+  if(idx>=pool.length){
+    if(wrong.length){
+      pool=[...wrong];
+      wrong=[];
+      idx=0;
+      alert("Opravné kolo – špatné otázky");
+      next();
       return;
     }
+    const pct=((correct/total)*100).toFixed(1);
+    quizRoot.innerHTML=`<h2 class="quiz-title">Hotovo</h2>
+      <p class="quiz-sub">${correct} z ${total} správně (${pct}%)</p>`;
+    return;
   }
 
-  const q = pool[idx];
+  const q=pool[idx];
+  const h=document.createElement("h2");
+  h.className="quiz-title";
+  h.textContent=q.prompt;
+  quizRoot.appendChild(h);
 
-  const title = document.createElement("h2");
-  title.className = "quiz-title";
-  title.textContent = q.prompt || "Otázka";
+  const info=document.createElement("p");
+  info.className="quiz-sub";
+  if(q.type==="choice"){
+    info.textContent=(q.correct.length>1)?"Více správných odpovědí":"Jedna správná odpověď";
+  }else{
+    info.textContent="Otevřená otázka";
+  }
+  quizRoot.appendChild(info);
 
-  const sub = document.createElement("p");
-  sub.className = "quiz-sub";
-  if (q.type === "text") sub.textContent = "Napiš odpověď a potvrď.";
-  else sub.textContent = (Array.isArray(q.correct) && q.correct.length > 1) ? "Vyber všechny správné a potvrď." : "Vyber odpověď.";
-
-  quizRoot.appendChild(title);
-  quizRoot.appendChild(sub);
-
-  if (q.type === "text") renderTextQuestion(q);
-  else renderChoiceQuestion(q);
+  if(q.type==="choice") renderChoice(q);
+  else renderText(q);
 }
 
-function renderChoiceQuestion(q){
-  const answers = Array.isArray(q.answers) ? q.answers : [];
-  const correctSet = new Set(Array.isArray(q.correct) ? q.correct : []);
-  const multi = correctSet.size > 1;
+function renderChoice(q){
+  const sel=new Set();
+  const wrap=document.createElement("div");
+  wrap.className="answer-grid";
 
-  const wrap = document.createElement("div");
-  wrap.className = "answer-grid";
-
-  const selected = new Set();
-
-  answers.forEach((ans, i) => {
-    const btn = document.createElement("button");
-    btn.className = "answer-btn";
-    btn.type = "button";
-    btn.dataset.id = ans.id;
-    btn.innerHTML = `<span class="letter">${String.fromCharCode(65+i)}</span><span class="txt">${escapeHtml(ans.text)}</span>`;
-
-    btn.addEventListener("click", () => {
-      if (locked) return;
-
-      if (!multi){
-        selected.clear();
-        selected.add(ans.id);
-        evaluateChoice(selected, correctSet, wrap);
-      } else {
-        if (selected.has(ans.id)) selected.delete(ans.id);
-        else selected.add(ans.id);
-        btn.classList.toggle("selected", selected.has(ans.id));
+  q.answers.forEach((a,i)=>{
+    const b=document.createElement("button");
+    b.className="answer-btn";
+    b.innerHTML=`<span class="letter">${String.fromCharCode(65+i)}</span><span class="txt">${escapeHtml(a.text)}</span>`;
+    b.onclick=()=>{
+      if(locked) return;
+      if(q.correct.length===1){
+        sel.clear(); sel.add(a.id);
+      }else{
+        sel.has(a.id)?sel.delete(a.id):sel.add(a.id);
+        b.classList.toggle("selected",sel.has(a.id));
       }
-    });
-
-    wrap.appendChild(btn);
+    };
+    b.dataset.id=a.id;
+    wrap.appendChild(b);
   });
-
   quizRoot.appendChild(wrap);
 
-  if (multi){
-    const row = document.createElement("div");
-    row.className = "row";
+  const row=document.createElement("div");row.className="row";
+  const evalBtn=document.createElement("button");
+  evalBtn.className="btn primary";evalBtn.textContent="Vyhodnotit";
+  const nextBtn=document.createElement("button");
+  nextBtn.className="btn";nextBtn.textContent="Další";nextBtn.disabled=true;
 
-    const submit = document.createElement("button");
-    submit.className = "btn primary";
-    submit.type = "button";
-    submit.textContent = "Odeslat";
-    submit.addEventListener("click", () => {
-      if (locked) return;
-      if (selected.size === 0) return alert("Vyber aspoň jednu možnost.");
-      evaluateChoice(selected, correctSet, wrap);
+  evalBtn.onclick=()=>{
+    if(locked) return;
+    locked=true;
+    total++;
+    const ok=[...sel].sort().join()===[...q.correct].sort().join();
+    if(ok) correct++; else wrong.push(q);
+
+    [...wrap.children].forEach(b=>{
+      const id=b.dataset.id;
+      if(q.correct.includes(id)) b.classList.add("correct");
+      if(sel.has(id)&&!q.correct.includes(id)) b.classList.add("wrong");
+      b.disabled=true;
     });
+    nextBtn.disabled=false;
+  };
 
-    const clear = document.createElement("button");
-    clear.className = "btn ghost";
-    clear.type = "button";
-    clear.textContent = "Vymazat výběr";
-    clear.addEventListener("click", () => {
-      if (locked) return;
-      selected.clear();
-      wrap.querySelectorAll(".answer-btn").forEach(b => b.classList.remove("selected"));
-    });
+  nextBtn.onclick=()=>{idx++;next();};
 
-    row.appendChild(submit);
-    row.appendChild(clear);
-    quizRoot.appendChild(row);
-  }
-}
-
-function evaluateChoice(selectedSet, correctSet, wrap){
-  locked = true;
-  const buttons = [...wrap.querySelectorAll(".answer-btn")];
-  buttons.forEach(b => b.disabled = true);
-
-  buttons.forEach(b => {
-    const id = b.dataset.id;
-    const isCorrect = correctSet.has(id);
-    const wasSelected = selectedSet.has(id);
-
-    if (isCorrect) b.classList.add("correct");
-    if (wasSelected && !isCorrect) b.classList.add("wrong");
-  });
-
-  const ok = setsEqual(selectedSet, correctSet);
-  autoAdvance(!ok);
-}
-
-function renderTextQuestion(q){
-  const acceptable = new Set((Array.isArray(q.correctText) ? q.correctText : [])
-    .map(normalizeAnswer)
-    .filter(Boolean));
-
-  const row = document.createElement("div");
-  row.className = "text-answer";
-
-  const input = document.createElement("input");
-  input.placeholder = "Napiš odpověď…";
-  input.autocomplete = "off";
-
-  const submit = document.createElement("button");
-  submit.className = "btn primary";
-  submit.type = "button";
-  submit.textContent = "Odeslat";
-
-  const feedback = document.createElement("div");
-  feedback.className = "note hidden";
-
-  function evalNow(){
-    if (locked) return;
-    const v = normalizeAnswer(input.value);
-    if (!v) return alert("Napiš odpověď.");
-    locked = true;
-
-    const ok = acceptable.size > 0 ? acceptable.has(v) : false;
-
-    feedback.classList.remove("hidden");
-    if (ok){
-      feedback.textContent = "✅ Správně";
-      feedback.style.borderColor = "color-mix(in srgb, var(--ok) 60%, var(--border))";
-      feedback.style.color = "color-mix(in srgb, var(--ok) 80%, var(--text))";
-    } else {
-      feedback.textContent = "❌ Špatně. Správně: " + (q.correctText?.[0] || "—");
-      feedback.style.borderColor = "color-mix(in srgb, var(--bad) 60%, var(--border))";
-      feedback.style.color = "color-mix(in srgb, var(--bad) 80%, var(--text))";
-    }
-
-    input.disabled = true;
-    submit.disabled = true;
-
-    autoAdvance(!ok);
-  }
-
-  submit.addEventListener("click", evalNow);
-  input.addEventListener("keydown", (e) => { if (e.key === "Enter") evalNow(); });
-
-  row.appendChild(input);
-  row.appendChild(submit);
+  row.append(evalBtn,nextBtn);
   quizRoot.appendChild(row);
-  quizRoot.appendChild(feedback);
 }
 
-/* Events */
-quizSelect.addEventListener("change", () => {
-  state.activeTestId = quizSelect.value;
-  saveState(state);
-  loadPool();
-  renderQuestion();
-});
+function renderText(q){
+  const input=document.createElement("input");
+  input.placeholder="Napiš odpověď…";
+  const row=document.createElement("div");row.className="row";
+  const evalBtn=document.createElement("button");
+  evalBtn.className="btn primary";evalBtn.textContent="Vyhodnotit";
+  const nextBtn=document.createElement("button");
+  nextBtn.className="btn";nextBtn.textContent="Další";nextBtn.disabled=true;
 
-restartBtn.addEventListener("click", () => {
-  state = loadState(); // refresh (admin changes)
-  setTheme(state.theme);
-  renderSelect();
-  loadPool();
-  renderQuestion();
-});
+  const note=document.createElement("div");note.className="note hidden";
 
-themeBtn.addEventListener("click", () => {
-  state.theme = (document.documentElement.getAttribute("data-theme") === "dark") ? "light" : "dark";
-  setTheme(state.theme);
-  saveState(state);
-});
+  evalBtn.onclick=()=>{
+    if(locked) return;
+    locked=true;
+    total++;
+    const ok=q.correctText.map(norm).includes(norm(input.value));
+    if(ok) correct++; else wrong.push(q);
+    note.classList.remove("hidden");
+    note.textContent=ok?"Správně":"Špatně – "+q.correctText[0];
+    nextBtn.disabled=false;
+  };
+  nextBtn.onclick=()=>{idx++;next();};
 
-/* init */
-renderSelect();
-loadPool();
-renderQuestion();
+  row.append(input,evalBtn,nextBtn);
+  quizRoot.append(row,note);
+}
+
+quizSelect.onchange=()=>{state.activeTestId=quizSelect.value;saveState(state);start();};
+restartBtn.onclick=start;
+themeBtn.onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";setTheme(state.theme);saveState(state);};
+
+renderSelect(); start();
