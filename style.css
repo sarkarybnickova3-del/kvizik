@@ -1,21 +1,21 @@
 :root {
-  --radius: 18px;
-  --bg: #0b0f19;
-  --card: #121a2a;
-  --text: #e8eefc;
-  --muted: #a9b4d6;
-  --border: #22304a;
+  --radius: 16px;
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --border: #334155;
   --primary: #3b82f6;
-  --ok: #2eaf5d;
-  --bad: #e24b4b;
+  --ok: #22c55e;
+  --bad: #ef4444;
 }
 
 html[data-theme="light"] {
-  --bg: #f5f7fb;
+  --bg: #f1f5f9;
   --card: #ffffff;
-  --text: #111827;
-  --muted: #4b5563;
-  --border: #e5e7eb;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
 }
 
 body { 
@@ -23,97 +23,56 @@ body {
   background: var(--bg); 
   color: var(--text); 
   margin: 0; 
-  line-height: 1.6; 
+  transition: background 0.3s;
 }
 
-/* --- HORNÍ LIŠTA --- */
 .topbar { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  padding: 15px 30px; 
-  background: var(--card); 
-  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 1rem 2rem; background: var(--card); border-bottom: 1px solid var(--border);
 }
 
-.nav { 
-  display: flex; 
-  background: var(--bg); 
-  padding: 4px; 
-  border-radius: 12px; 
-  border: 1px solid var(--border);
-}
-
-.nav a { 
-  text-decoration: none; 
-  color: var(--muted); 
-  padding: 8px 20px; 
-  border-radius: 10px; 
-  font-weight: 600; 
-  transition: 0.3s;
-}
-
-.nav a.active { 
-  background: var(--card); 
-  color: var(--primary); 
-}
-
-/* --- KONTEJNER A KARTY --- */
-.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+.container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
 
 .card, .step-card { 
-  background: var(--card); 
-  border-radius: var(--radius); 
-  padding: 30px; 
-  border: 1px solid var(--border); 
-  margin-bottom: 20px;
+  background: var(--card); border-radius: var(--radius); 
+  padding: 2rem; border: 1px solid var(--border); margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
-/* --- VELKÝ TEST --- */
-.quiz-q-title { 
-  font-size: 2.2rem; 
-  font-weight: 800; 
-  text-align: center; 
-  margin-bottom: 30px; 
-}
+/* Kvízové prvky */
+.quiz-q-title { font-size: 1.8rem; text-align: center; margin-bottom: 2rem; }
 
 .answer-btn { 
-  display: flex; 
-  align-items: center; 
-  padding: 20px; 
-  font-size: 1.4rem; 
-  background: rgba(255,255,255,0.03); 
-  border: 2px solid var(--border); 
-  border-radius: 15px; 
-  color: var(--text); 
-  cursor: pointer; 
-  width: 100%;
-  margin-bottom: 10px;
+  display: flex; align-items: center; width: 100%; padding: 1rem; 
+  margin-bottom: 0.8rem; background: var(--bg); border: 2px solid var(--border);
+  border-radius: 12px; color: var(--text); cursor: pointer; font-size: 1.1rem;
+  transition: all 0.2s;
 }
 
-.answer-btn .letter { 
-  background: var(--border); 
-  width: 45px; height: 45px; 
-  display: flex; align-items: center; justify-content: center; 
-  border-radius: 10px; margin-right: 20px; 
-  font-weight: 800;
-}
-
+.answer-btn:hover { border-color: var(--primary); }
 .answer-btn.selected { border-color: var(--primary); background: rgba(59,130,246,0.1); }
-.answer-btn.correct { border-color: var(--ok); background: rgba(46,175,93,0.15); }
-.answer-btn.wrong { border-color: var(--bad); background: rgba(226,75,75,0.15); }
+.answer-btn.correct { border-color: var(--ok) !important; background: rgba(34,197,94,0.15) !important; }
+.answer-btn.wrong { border-color: var(--bad) !important; background: rgba(239,68,68,0.15) !important; }
 
-/* STATISTIKA */
-.stats-final { text-align: center; padding: 20px; }
-.percent-display { font-size: 5rem; font-weight: 900; color: var(--primary); display: block; }
+/* Vypisovací pole - OPRAVENO */
+.big-input {
+  width: 100%; padding: 1.2rem; font-size: 1.3rem; border-radius: 12px;
+  background: var(--bg); border: 2px solid var(--border); color: var(--text);
+  text-align: center; box-sizing: border-box; margin-bottom: 1rem;
+}
 
-.btn { padding: 12px 25px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; }
+.input-correct { border-color: var(--ok); background: rgba(34,197,94,0.1); }
+.input-wrong { border-color: var(--bad); background: rgba(239,68,68,0.1); }
+
+/* UI Prvky */
+.btn { 
+  padding: 0.8rem 1.5rem; border-radius: 10px; border: none; 
+  font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+}
 .btn.primary { background: var(--primary); color: white; }
-.btn.xl { width: 100%; padding: 20px; font-size: 1.3rem; margin-top: 10px; }
+.btn.xl { width: 100%; padding: 1.2rem; font-size: 1.1rem; }
 .hidden { display: none !important; }
-
-/* Admin prvky */
 input[type="text"], select { 
-  width: 100%; padding: 15px; border-radius: 10px; 
-  background: var(--bg); color: white; border: 1px solid var(--border); margin-bottom: 10px;
+  width: 100%; padding: 0.8rem; border-radius: 8px; 
+  background: var(--bg); color: var(--text); border: 1px solid var(--border);
 }
