@@ -3,31 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kvíz</title>
+  <title>Kvíz - Test</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <h1>📝 Kvíz</h1>
-      <div class="sub">Statistika úspěšnosti + opravování chyb</div>
+    <nav class="nav">
+      <a href="index.html" class="active">Test</a>
+      <a href="admin.html">Správa</a>
+    </nav>
+    <div class="select-container">
+      <select id="quizSelect"></select>
     </div>
-    <div class="top-controls">
-      <div class="select-wrap">
-        <select id="quizSelect" title="Vyber test"></select>
-      </div>
-      <button id="themeBtn" class="btn ghost icon-btn" type="button" title="Přepnout režim">🌙 / ☀️</button>
-      <nav class="nav">
-        <a href="index.html" class="active">Test</a>
-        <a href="admin.html">Správa</a>
-      </nav>
-    </div>
+    <button id="themeBtn" class="btn" style="position:absolute; right:20px; top:25px;">🌙</button>
   </header>
+
   <main class="container">
-    <div id="quiz" class="card"></div>
-    <div class="actions center-actions" style="justify-content:center; margin-top:20px;">
-      <button id="restartBtn" class="btn big" type="button" style="display:none;">Restartovat test</button>
-    </div>
+    <div id="quiz"></div>
+    <button id="restartBtn" class="btn primary xl hidden">Zkusit znovu</button>
   </main>
   <script src="app.js"></script>
 </body>
