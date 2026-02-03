@@ -1,176 +1,467 @@
-const STORE = { QUIZZES: "quizzes_v3", ACTIVE: "active_quiz_v3", THEME: "theme_v3" };
-const LETTERS = ["a","b","c","d","e","f","g","h"];
-let currentAnswerCount = 4;
+const STORE_KEY = "kvizik_v2";
 
-function loadQuizzes(){ return JSON.parse(localStorage.getItem(STORE.QUIZZES) || "{}"); }
-function saveQuizzes(d){ localStorage.setItem(STORE.QUIZZES, JSON.stringify(d)); render(); }
-function getActive(){ return localStorage.getItem(STORE.ACTIVE) || ""; }
+function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
 
-// PŘEPÍNÁNÍ TYPU OTÁZKY
+function loadState(){
+  const raw = localStorage.getItem(STORE_KEY);
+  try{
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === "object") return parsed;
+  }catch{}
+  const id = uid();
+  const state = {
+    theme: "dark",
+    activeTestId: id,
+    tests: { [id]: { id, name: "Můj test", questions: [] } }
+  };
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  return state;
+}
+
+function saveState(state){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+
+function setTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
+}
+
+function normalizeText(s){
+  return String(s ?? "").trim();
+}
+function normalizeTextLower(s){
+  return String(s ?? "").trim().toLowerCase();
+}
+
+const quizSelect = document.getElementById("quizSelect");
+const themeBtn = document.getElementById("themeBtn");
+
+const renameInput = document.getElementById("renameInput");
+const renameBtn = document.getElementById("renameBtn");
+const newQuizName = document.getElementById("newQuizName");
+const createQuizBtn = document.getElementById("createQuizBtn");
+const deleteQuizBtn = document.getElementById("deleteQuizBtn");
+
+const questionInput = document.getElementById("questionInput");
 const qTypeSelect = document.getElementById("qTypeSelect");
-qTypeSelect.onchange = () => {
-  document.getElementById("choiceArea").classList.toggle("hidden", qTypeSelect.value !== "choice");
-  document.getElementById("textArea").classList.toggle("hidden", qTypeSelect.value !== "text");
-};
 
-// VYTVOŘENÍ TESTU
-document.getElementById("createQuizBtn").onclick = () => {
-  const n = document.getElementById("newQuizName").value.trim();
-  if(!n) return alert("Zadej název testu");
-  const q = loadQuizzes();
-  if(q[n]) return alert("Test s tímto názvem už existuje");
-  q[n] = [];
-  localStorage.setItem(STORE.ACTIVE, n);
-  saveQuizzes(q);
-  document.getElementById("newQuizName").value = "";
-};
+const choiceArea = document.getElementById("choiceArea");
+const textArea = document.getElementById("textArea");
+const textCorrectInput = document.getElementById("textCorrectInput");
 
-// SMAZÁNÍ CELÉHO TESTU (OPRAVENO)
-document.getElementById("deleteQuizBtn").onclick = () => {
-  const active = getActive();
-  if(!active) return;
-  if(!confirm(`Opravdu chceš smazat celý test "${active}" i se všemi otázkami?`)) return;
-  
-  const all = loadQuizzes();
-  delete all[active];
-  
-  const zbyleKlice = Object.keys(all);
-  const novyActive = zbyleKlice.length > 0 ? zbyleKlice[0] : "";
-  localStorage.setItem(STORE.ACTIVE, novyActive);
-  saveQuizzes(all);
-};
+const answersContainer = document.getElementById("answersContainer");
+const addAnsBtn = document.getElementById("addAnsBtn");
+const remAnsBtn = document.getElementById("remAnsBtn");
 
-// ULOŽENÍ OTÁZKY
-document.getElementById("saveQuestionBtn").onclick = () => {
-  const text = document.getElementById("questionInput").value.trim();
-  const all = loadQuizzes();
-  const active = getActive();
-  if(!text || !active) return alert("Chybí otázka nebo vybraný test!");
+const saveQuestionBtn = document.getElementById("saveQuestionBtn");
 
-  let newQ = { question: text, type: qTypeSelect.value };
-  if(qTypeSelect.value === "choice"){
-    let ans = {}, corr = [];
-    document.querySelectorAll("#answersContainer > div").forEach((div, i) => {
-      const val = div.querySelector("input[type=text]").value.trim();
-      if(val){
-        ans[LETTERS[i]] = val;
-        if(div.querySelector("input[type=checkbox]").checked) corr.push(LETTERS[i]);
-      }
-    });
-    if(corr.length === 0) return alert("Označ aspoň jednu správnou odpověď!");
-    newQ.answers = ans; newQ.correct = corr;
+const listEl = document.getElementById("list");
+const countEl = document.getElementById("count");
+
+const exportBtn = document.getElementById("exportBtn");
+const importFile = document.getElementById("importFile");
+
+let state = loadState();
+setTheme(state.theme || "dark");
+
+function getActiveTest(){
+  return state.tests[state.activeTestId];
+}
+
+function renderSelect(){
+  quizSelect.innerHTML = "";
+  const tests = Object.values(state.tests);
+  tests.sort((a,b) => a.name.localeCompare(b.name, "cs"));
+
+  for (const t of tests){
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.name;
+    quizSelect.appendChild(opt);
+  }
+  quizSelect.value = state.activeTestId;
+
+  const t = getActiveTest();
+  renameInput.value = t?.name || "";
+}
+
+function ensureAtLeastOneTest(){
+  if (Object.keys(state.tests).length === 0){
+    const id = uid();
+    state.tests[id] = { id, name: "Můj test", questions: [] };
+    state.activeTestId = id;
+  }
+}
+
+function answerRow(letter){
+  const row = document.createElement("div");
+  row.className = "ans-row";
+  row.dataset.id = uid();
+
+  const tag = document.createElement("div");
+  tag.className = "tag";
+  tag.textContent = letter;
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = "Text odpovědi…";
+
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.title = "Správná odpověď";
+
+  row.appendChild(tag);
+  row.appendChild(input);
+  row.appendChild(check);
+  return row;
+}
+
+function ensureMinOptions(n=4){
+  while (answersContainer.children.length < n){
+    const letter = String.fromCharCode(65 + answersContainer.children.length);
+    answersContainer.appendChild(answerRow(letter));
+  }
+  refreshLetters();
+}
+
+function refreshLetters(){
+  [...answersContainer.children].forEach((row, i) => {
+    row.querySelector(".tag").textContent = String.fromCharCode(65 + i);
+  });
+}
+
+function setTypeUI(){
+  const t = qTypeSelect.value;
+  if (t === "text"){
+    choiceArea.classList.add("hidden");
+    textArea.classList.remove("hidden");
   } else {
-    const txtCorr = document.getElementById("textCorrectInput").value.trim();
-    if(!txtCorr) return alert("Zadej správnou textovou odpověď!");
-    newQ.correct = txtCorr;
+    textArea.classList.add("hidden");
+    choiceArea.classList.remove("hidden");
+  }
+}
+
+function validateQuestion(q){
+  if (!normalizeText(q.prompt)) return "Chybí znění otázky.";
+
+  if (q.type === "text"){
+    if (!Array.isArray(q.correctText) || q.correctText.length === 0) return "Chybí správná textová odpověď.";
+    return null;
   }
 
-  all[active].push(newQ);
-  saveQuizzes(all);
-  document.getElementById("questionInput").value = "";
-  document.getElementById("textCorrectInput").value = "";
-};
+  if (!Array.isArray(q.answers) || q.answers.length < 2) return "Musí být aspoň 2 možnosti.";
+  if (!Array.isArray(q.correct) || q.correct.length === 0) return "Zaškrtni aspoň jednu správnou odpověď.";
 
-// RENDER SEZNAMU A SELECTU
-function render(){
-  const all = loadQuizzes();
-  const act = getActive();
-  
-  const sel = document.getElementById("quizSelect");
-  sel.innerHTML = "";
-  
-  const klice = Object.keys(all);
-  if(klice.length === 0) {
-    sel.innerHTML = "<option value=''>Žádný test</option>";
-    document.getElementById("list").innerHTML = "Žádné otázky";
-    document.getElementById("count").innerText = "0";
+  // correct must exist among answers
+  const ids = new Set(q.answers.map(a => a.id));
+  for (const cid of q.correct){
+    if (!ids.has(cid)) return "Jedna ze správných odpovědí neexistuje.";
+  }
+  return null;
+}
+
+function buildQuestionFromForm(){
+  const type = qTypeSelect.value;
+  const prompt = normalizeText(questionInput.value);
+
+  if (type === "text"){
+    const variants = normalizeText(textCorrectInput.value)
+      .split(";")
+      .map(s => normalizeText(s))
+      .filter(Boolean);
+
+    return {
+      id: uid(),
+      type: "text",
+      prompt,
+      correctText: variants
+    };
+  }
+
+  // choice
+  const rows = [...answersContainer.querySelectorAll(".ans-row")];
+  const answers = rows
+    .map((row) => {
+      const id = row.dataset.id;
+      const text = normalizeText(row.querySelector('input[type="text"]').value);
+      const correct = row.querySelector('input[type="checkbox"]').checked;
+      return { id, text, correct };
+    })
+    .filter(a => a.text);
+
+  const correct = answers.filter(a => a.correct).map(a => a.id);
+  const mappedAnswers = answers.map(a => ({ id: a.id, text: a.text }));
+
+  return {
+    id: uid(),
+    type: "choice",
+    prompt,
+    answers: mappedAnswers,
+    correct
+  };
+}
+
+function clearQuestionForm(){
+  questionInput.value = "";
+  textCorrectInput.value = "";
+  // reset choices but keep count
+  [...answersContainer.querySelectorAll(".ans-row")].forEach((row) => {
+    row.querySelector('input[type="text"]').value = "";
+    row.querySelector('input[type="checkbox"]').checked = false;
+  });
+  questionInput.focus();
+}
+
+function addQuestion(){
+  const q = buildQuestionFromForm();
+  const err = validateQuestion(q);
+  if (err) return alert(err);
+
+  const test = getActiveTest();
+  test.questions = test.questions || [];
+  test.questions.push(q);
+
+  saveState(state);
+  renderAll();
+  clearQuestionForm();
+}
+
+function renderList(){
+  const test = getActiveTest();
+  const qs = test.questions || [];
+  countEl.textContent = String(qs.length);
+
+  listEl.innerHTML = "";
+  if (qs.length === 0){
+    listEl.innerHTML = '<div class="note">Zatím tu nejsou žádné otázky.</div>';
     return;
   }
 
-  klice.forEach(k => {
-    const o = document.createElement("option"); o.value = k; o.innerText = k;
-    sel.appendChild(o);
-  });
-  sel.value = act;
-  
-  const list = all[act] || [];
-  document.getElementById("count").innerText = list.length;
-  const listEl = document.getElementById("list");
-  listEl.innerHTML = "";
-  list.forEach((q, i) => {
-    const d = document.createElement("div");
-    d.style.cssText = "background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center";
-    d.innerHTML = `<span>${q.question}</span><button class="btn" onclick="deleteQ(${i})" style="background:#ef4444; color:white; padding:5px 15px">Smazat</button>`;
-    listEl.appendChild(d);
+  qs.forEach((q, i) => {
+    const item = document.createElement("div");
+    item.className = "q-item";
+
+    const head = document.createElement("div");
+    head.className = "head";
+
+    const left = document.createElement("div");
+    left.innerHTML = `
+      <div class="q">${escapeHtml(q.prompt)}</div>
+      <div class="meta">#${i+1} • ${q.type === "text" ? "otevřená" : "výběr"}${q.type==="choice" && q.correct?.length>1 ? " • více správných" : ""}</div>
+    `;
+
+    const del = document.createElement("button");
+    del.className = "btn danger";
+    del.type = "button";
+    del.textContent = "Smazat";
+    del.addEventListener("click", () => {
+      if (!confirm("Smazat tuto otázku?")) return;
+      test.questions.splice(i,1);
+      saveState(state);
+      renderAll();
+    });
+
+    head.appendChild(left);
+    head.appendChild(del);
+
+    const chips = document.createElement("div");
+    chips.className = "chips";
+
+    const typeChip = document.createElement("span");
+    typeChip.className = "chip type";
+    typeChip.textContent = q.type === "text" ? "TEXT" : "CHOICE";
+    chips.appendChild(typeChip);
+
+    if (q.type === "choice"){
+      const correctSet = new Set(q.correct || []);
+      (q.answers || []).forEach((a, idx) => {
+        const chip = document.createElement("span");
+        chip.className = "chip " + (correctSet.has(a.id) ? "ok" : "bad");
+        chip.textContent = `${String.fromCharCode(65+idx)}) ${a.text}`;
+        chips.appendChild(chip);
+      });
+    } else {
+      const chip = document.createElement("span");
+      chip.className = "chip ok";
+      chip.textContent = "Správně: " + (q.correctText?.[0] || "—");
+      chips.appendChild(chip);
+    }
+
+    item.appendChild(head);
+    item.appendChild(chips);
+    listEl.appendChild(item);
   });
 }
 
-window.deleteQ = (i) => {
-  const all = loadQuizzes();
-  all[getActive()].splice(i, 1);
-  saveQuizzes(all);
-};
+function createQuiz(){
+  const name = normalizeText(newQuizName.value);
+  if (!name) return alert("Zadej název nového testu.");
 
-// EXPORT JSON (OPRAVENO)
-document.getElementById("exportBtn").onclick = () => {
-  const all = loadQuizzes();
-  const active = getActive();
-  if(!active || !all[active]) return alert("Není co exportovat");
-  
-  const blob = new Blob([JSON.stringify(all[active], null, 2)], {type: "application/json"});
+  // uniqueness by name not required, but let's avoid exact duplicates
+  const exists = Object.values(state.tests).some(t => normalizeTextLower(t.name) === normalizeTextLower(name));
+  if (exists) return alert("Test s tímto názvem už existuje.");
+
+  const id = uid();
+  state.tests[id] = { id, name, questions: [] };
+  state.activeTestId = id;
+
+  saveState(state);
+  newQuizName.value = "";
+  renderAll();
+}
+
+function deleteQuiz(){
+  const ids = Object.keys(state.tests);
+  if (ids.length <= 1) return alert("Musí zůstat alespoň jeden test.");
+
+  const t = getActiveTest();
+  if (!confirm(`Opravdu smazat test „${t.name}“ (včetně otázek)?`)) return;
+
+  delete state.tests[state.activeTestId];
+  state.activeTestId = Object.keys(state.tests)[0];
+
+  saveState(state);
+  renderAll();
+}
+
+function renameQuiz(){
+  const t = getActiveTest();
+  const name = normalizeText(renameInput.value);
+  if (!name) return alert("Název nemůže být prázdný.");
+  t.name = name;
+  saveState(state);
+  renderAll();
+}
+
+function exportJson(){
+  const t = getActiveTest();
+  const payload = { name: t.name, questions: t.questions || [] };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; 
-  a.download = `test-${active}.json`; 
-  a.click();
-  URL.revokeObjectURL(url);
-};
 
-// IMPORT JSON
-document.getElementById("importFile").onchange = (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${slug(t.name) || "test"}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+
+function importJson(file){
   const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      const all = loadQuizzes();
-      const active = getActive();
-      if(!active) return alert("Nejdřív vytvoř nebo vyber test, do kterého chceš data nahrát.");
-      all[active] = data;
-      saveQuizzes(all);
-      alert("Import úspěšný!");
-    } catch(err) { alert("Chyba při čtení JSON souboru"); }
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(String(reader.result || "{}"));
+      let questions = null;
+      let name = null;
+
+      if (Array.isArray(parsed)){
+        questions = parsed;
+      } else if (parsed && typeof parsed === "object"){
+        if (typeof parsed.name === "string") name = parsed.name;
+        if (Array.isArray(parsed.questions)) questions = parsed.questions;
+      }
+
+      if (!Array.isArray(questions)) throw new Error("Neplatný JSON. Očekávám {name, questions:[...]} nebo [...].");
+
+      // validate basic shape
+      for (const q of questions){
+        if (!q || typeof q !== "object") throw new Error("Neplatná otázka.");
+        if (!q.type || !q.prompt) throw new Error("Otázce chybí type/prompt.");
+        if (q.type === "choice"){
+          if (!Array.isArray(q.answers) || q.answers.length < 2) throw new Error("Choice otázka musí mít answers.");
+          if (!Array.isArray(q.correct) || q.correct.length < 1) throw new Error("Choice otázka musí mít correct.");
+        }
+        if (q.type === "text"){
+          if (!Array.isArray(q.correctText) || q.correctText.length < 1) throw new Error("Text otázka musí mít correctText.");
+        }
+      }
+
+      const t = getActiveTest();
+      const importedName = normalizeText(name || t.name);
+
+      if (!confirm(`Načíst JSON a přepsat otázky v testu „${t.name}“?`)) return;
+
+      t.name = importedName;
+      t.questions = questions;
+      saveState(state);
+      renderAll();
+      alert("Hotovo. Test byl načten.");
+    }catch(e){
+      alert("Import selhal: " + (e?.message || e));
+    }
   };
   reader.readAsText(file);
-};
-
-// ZMĚNA TESTU V SELECTU
-document.getElementById("quizSelect").onchange = (e) => {
-  localStorage.setItem(STORE.ACTIVE, e.target.value);
-  render();
-};
-
-function renderAnsInputs(){
-  const cont = document.getElementById("answersContainer");
-  cont.innerHTML = "";
-  for(let i=0; i<currentAnswerCount; i++){
-    const d = document.createElement("div");
-    d.style.display = "flex"; d.style.gap = "15px"; d.style.marginBottom = "10px";
-    d.innerHTML = `<input type="checkbox" style="width:30px; height:30px; margin-top:5px"> <input type="text" placeholder="Možnost ${LETTERS[i].toUpperCase()}" style="margin-bottom:0">`;
-    cont.appendChild(d);
-  }
 }
 
-document.getElementById("addAnsBtn").onclick = () => { currentAnswerCount++; renderAnsInputs(); };
-document.getElementById("remAnsBtn").onclick = () => { if(currentAnswerCount>1) currentAnswerCount--; renderAnsInputs(); };
+/* helpers */
+function slug(s){
+  return String(s).toLowerCase()
+    .normalize("NFD").replace(/\\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+function escapeHtml(str){
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-// Téme toggle
-document.getElementById("themeBtn").onclick = () => {
-  const n = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", n);
-  localStorage.setItem(STORE.THEME, n);
-};
+/* Events */
+quizSelect.addEventListener("change", () => {
+  state.activeTestId = quizSelect.value;
+  saveState(state);
+  renderAll();
+});
 
-renderAnsInputs();
-render();
+qTypeSelect.addEventListener("change", setTypeUI);
+
+addAnsBtn.addEventListener("click", () => {
+  const letter = String.fromCharCode(65 + answersContainer.children.length);
+  answersContainer.appendChild(answerRow(letter));
+  refreshLetters();
+});
+remAnsBtn.addEventListener("click", () => {
+  if (answersContainer.children.length <= 2) return alert("Nech aspoň 2 možnosti.");
+  answersContainer.lastElementChild.remove();
+  refreshLetters();
+});
+
+saveQuestionBtn.addEventListener("click", addQuestion);
+
+createQuizBtn.addEventListener("click", createQuiz);
+deleteQuizBtn.addEventListener("click", deleteQuiz);
+renameBtn.addEventListener("click", renameQuiz);
+
+exportBtn.addEventListener("click", exportJson);
+importFile.addEventListener("change", (e) => {
+  const f = e.target.files?.[0];
+  if (f) importJson(f);
+  e.target.value = "";
+});
+
+themeBtn.addEventListener("click", () => {
+  state.theme = (document.documentElement.getAttribute("data-theme") === "dark") ? "light" : "dark";
+  setTheme(state.theme);
+  saveState(state);
+});
+
+function renderAll(){
+  ensureAtLeastOneTest();
+  renderSelect();
+  setTypeUI();
+  renderList();
+}
+
+/* init */
+ensureAtLeastOneTest();
+renderSelect();
+ensureMinOptions(4);
+setTypeUI();
+renderList();
