@@ -8,81 +8,119 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="select-container">
-      <select id="quizSelect"></select>
+    <div class="left">
+      <div class="brand">Správa</div>
+      <div class="pill">
+        <label class="sr-only" for="quizSelect">Vybrat test</label>
+        <select id="quizSelect"></select>
+      </div>
     </div>
+
     <nav class="nav">
       <a href="index.html">Test</a>
-      <a href="admin.html" class="active">Správa</a>
+      <a class="active" href="admin.html">Správa</a>
     </nav>
-    <button id="themeBtn" class="btn">🌙/☀️</button>
+
+    <div class="right">
+      <button id="themeBtn" class="btn ghost" type="button" title="Světlý / tmavý režim">🌙/☀️</button>
+    </div>
   </header>
 
   <main class="container">
-    <section class="step-card">
-      <div class="step-header">
-        <div class="step-num">1</div>
-        <h2>Správa testů</h2>
-      </div>
-      <div class="grid-2">
-        <div>
-          <label>Název nového testu</label>
-          <input id="newQuizName" type="text" placeholder="Např. Matematika 1" />
-          <button id="createQuizBtn" class="btn primary xl">Vytvořit test</button>
+    <div class="grid-3">
+      <!-- 1) Testy -->
+      <section class="card block">
+        <h2>1) Test</h2>
+
+        <label>Název aktuálního testu</label>
+        <input id="renameInput" type="text" placeholder="Např. ICT – otázky 1–25" />
+        <div class="row">
+          <button id="renameBtn" class="btn primary big" type="button">Přejmenovat</button>
         </div>
-        <div>
-          <label>Akce</label>
-          <button id="deleteQuizBtn" class="btn xl" style="background:#450a0a; color:#f87171">Smazat vybraný test</button>
+
+        <hr />
+
+        <label>Vytvořit nový test</label>
+        <input id="newQuizName" type="text" placeholder="Např. Čeština – knihy" />
+        <div class="row">
+          <button id="createQuizBtn" class="btn primary big" type="button">➕ Vytvořit</button>
+          <button id="deleteQuizBtn" class="btn danger big" type="button">🗑️ Smazat</button>
         </div>
-      </div>
-    </section>
 
-    <section class="step-card">
-      <div class="step-header">
-        <div class="step-num">2</div>
-        <h2>Přidat otázku</h2>
-      </div>
-      <label>Znění otázky</label>
-      <input id="questionInput" type="text" placeholder="Co chcete otestovat?" style="font-size:1.4rem; font-weight:bold;" />
-      
-      <label>Typ odpovědi</label>
-      <select id="qTypeSelect">
-        <option value="choice">Výběr z možností (A, B, C...)</option>
-        <option value="text">Otevřená odpověď (vepsat text)</option>
-      </select>
+        <p class="hint">
+          Smazání odstraní celý test i otázky. Musí zůstat alespoň jeden test.
+        </p>
+      </section>
 
-      <div id="choiceArea">
-        <div id="answersContainer"></div>
-        <div style="display:flex; gap:10px; margin-top:10px">
-          <button id="addAnsBtn" class="btn">+ Možnost</button>
-          <button id="remAnsBtn" class="btn">- Odebrat</button>
+      <!-- 2) Přidání otázky -->
+      <section class="card block">
+        <h2>2) Přidat otázku</h2>
+
+        <label>Znění otázky</label>
+        <input id="questionInput" type="text" placeholder="Napiš otázku..." />
+
+        <label>Typ otázky</label>
+        <select id="qTypeSelect">
+          <option value="choice">Výběr z možností</option>
+          <option value="text">Otevřená (textová odpověď)</option>
+        </select>
+
+        <div id="choiceArea">
+          <div class="row between">
+            <div class="muted">Možnosti (zaškrtni všechny správné)</div>
+            <div class="row">
+              <button id="addAnsBtn" class="btn ghost" type="button">+ možnost</button>
+              <button id="remAnsBtn" class="btn ghost" type="button">− možnost</button>
+            </div>
+          </div>
+
+          <div id="answersContainer" class="answers-admin"></div>
         </div>
-      </div>
 
-      <div id="textArea" class="hidden">
-        <label>Správná textová odpověď</label>
-        <input id="textCorrectInput" type="text" placeholder="Přesné znění..." />
-      </div>
+        <div id="textArea" class="hidden">
+          <label>Správná odpověď (může být víc variant)</label>
+          <input id="textCorrectInput" type="text" placeholder="Např. Praha; praha" />
+          <p class="hint">Odděl varianty středníkem <strong>;</strong>. Hodnocení je bez ohledu na velikost písmen.</p>
+        </div>
 
-      <button id="saveQuestionBtn" class="btn primary xl" style="margin-top:20px">✅ Uložit otázku</button>
-    </section>
+        <div class="row">
+          <button id="saveQuestionBtn" class="btn primary big" type="button">✅ Přidat otázku</button>
+        </div>
 
-    <section class="step-card">
-      <div class="step-header">
-        <div class="step-num">3</div>
-        <h2>Seznam a Export</h2>
-        <span id="count" style="margin-left:auto; background:var(--bg); padding:5px 15px; border-radius:10px">0</span>
-      </div>
-      <div id="list" style="margin-bottom:20px"></div>
-      <div class="grid-2">
-        <button id="exportBtn" class="btn xl">💾 Exportovat JSON</button>
-        <label class="btn xl" style="background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center">
-          📥 Importovat JSON
-          <input id="importFile" type="file" accept="application/json" style="display:none" />
-        </label>
-      </div>
-    </section>
+        <p class="hint">
+          U výběru z možností můžeš mít <strong>více správných</strong> odpovědí.
+        </p>
+      </section>
+
+      <!-- 3) Seznam + import/export -->
+      <section class="card block">
+        <h2>3) Otázky, export/import</h2>
+
+        <div class="row between">
+          <div class="muted">Počet otázek:</div>
+          <div class="badge" id="count">0</div>
+        </div>
+
+        <div id="list" class="list"></div>
+
+        <hr />
+
+        <div class="row">
+          <button id="exportBtn" class="btn big" type="button">💾 Uložit test (JSON)</button>
+
+          <label class="btn big file">
+            📥 Načíst test (JSON)
+            <input id="importFile" type="file" accept="application/json" />
+          </label>
+        </div>
+
+        <p class="hint">
+          <strong>Uložit test</strong> = stáhne JSON jako zálohu. <strong>Načíst test</strong> = nahraje JSON a <em>přepíše</em> otázky vybraného testu.
+        </p>
+      </section>
+    </div>
   </main>
+
   <script src="admin.js"></script>
 </body>
 </html>
