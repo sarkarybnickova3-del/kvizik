@@ -1,241 +1,100 @@
 const STORE = { QUIZZES: "quizzes_v3", ACTIVE: "active_quiz_v3", THEME: "theme_v3" };
 const LETTERS = ["a","b","c","d","e","f","g","h"];
-const MAX_ANSWERS = 8;
-let currentAnswerCount = 2;
-
-// Elements
-const quizSelect = document.getElementById("quizSelect");
-const newQuizName = document.getElementById("newQuizName");
-const createQuizBtn = document.getElementById("createQuizBtn");
-const deleteQuizBtn = document.getElementById("deleteQuizBtn");
-const questionInput = document.getElementById("questionInput");
-
-// Type switching elements
-const qTypeSelect = document.getElementById("qTypeSelect");
-const choiceContainer = document.getElementById("choiceContainer");
-const textContainer = document.getElementById("textContainer");
-const textCorrectInput = document.getElementById("textCorrectInput");
-
-const answersContainer = document.getElementById("answersContainer");
-const addAnsBtn = document.getElementById("addAnsBtn");
-const remAnsBtn = document.getElementById("remAnsBtn");
-const saveQuestionBtn = document.getElementById("saveQuestionBtn");
-const seedBtn = document.getElementById("seedBtn");
-const listEl = document.getElementById("list");
-const countEl = document.getElementById("count");
-const exportBtn = document.getElementById("exportBtn");
-const importFile = document.getElementById("importFile");
-
-// Init
-loadTheme();
-ensureDefaultQuiz();
-renderAnswerInputs();
-render();
-updateTypeUI();
-
-// --- Functions ---
-
-function loadTheme(){ document.documentElement.setAttribute("data-theme", localStorage.getItem(STORE.THEME) || "dark"); }
-document.getElementById("themeBtn").onclick = () => {
-  const n = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", n); localStorage.setItem(STORE.THEME, n);
-};
+let currentAnswerCount = 4;
 
 function loadQuizzes(){ return JSON.parse(localStorage.getItem(STORE.QUIZZES) || "{}"); }
 function saveQuizzes(d){ localStorage.setItem(STORE.QUIZZES, JSON.stringify(d)); render(); }
 function getActive(){ return localStorage.getItem(STORE.ACTIVE) || ""; }
-function setActive(n){ localStorage.setItem(STORE.ACTIVE, n); }
 
-function ensureDefaultQuiz(){
-  let q = loadQuizzes();
-  if(!Object.keys(q).length) { q["Obecný test"] = []; saveQuizzes(q); }
-  if(!getActive() || !q[getActive()]) setActive(Object.keys(q)[0]);
-}
+const qTypeSelect = document.getElementById("qTypeSelect");
+qTypeSelect.onchange = () => {
+  document.getElementById("choiceArea").classList.toggle("hidden", qTypeSelect.value !== "choice");
+  document.getElementById("textArea").classList.toggle("hidden", qTypeSelect.value !== "text");
+};
 
-// UI Type Switching
-qTypeSelect.onchange = updateTypeUI;
-
-function updateTypeUI(){
-  const type = qTypeSelect.value;
-  if(type === "choice"){
-    choiceContainer.classList.remove("hidden");
-    textContainer.classList.add("hidden");
-  } else {
-    choiceContainer.classList.add("hidden");
-    textContainer.classList.remove("hidden");
-  }
-}
-
-// UI for Answers (Choice mode)
-function renderAnswerInputs(){
-  const oldVals = {};
-  answersContainer.querySelectorAll("input[type=text]").forEach((inp, i) => oldVals[LETTERS[i]] = inp.value);
-  const oldChecks = {};
-  answersContainer.querySelectorAll("input[type=checkbox]").forEach((inp, i) => oldChecks[LETTERS[i]] = inp.checked);
-
-  answersContainer.innerHTML = "";
+function renderAnsInputs(){
+  const cont = document.getElementById("answersContainer");
+  cont.innerHTML = "";
   for(let i=0; i<currentAnswerCount; i++){
-    const l = LETTERS[i];
-    const row = document.createElement("div");
-    row.className = "answer-row";
-    row.innerHTML = `
-      <div class="ans-badge">${l.toUpperCase()}</div>
-      <input type="text" data-l="${l}" placeholder="Odpověď" value="${oldVals[l]||''}">
-      <label class="check-label"><input type="checkbox" ${oldChecks[l]?'checked':''}> Správně</label>
-    `;
-    answersContainer.appendChild(row);
+    const d = document.createElement("div");
+    d.style.display = "flex"; d.style.gap = "15px"; d.style.marginBottom = "10px";
+    d.innerHTML = `
+      <input type="checkbox" style="width:30px; height:30px; margin-top:15px"> 
+      <input type="text" placeholder="Možnost ${LETTERS[i].toUpperCase()}" style="margin-bottom:0">`;
+    cont.appendChild(d);
   }
-  addAnsBtn.disabled = currentAnswerCount >= MAX_ANSWERS;
-  remAnsBtn.disabled = currentAnswerCount <= 2;
 }
 
-addAnsBtn.onclick = () => { if(currentAnswerCount < MAX_ANSWERS) { currentAnswerCount++; renderAnswerInputs(); }};
-remAnsBtn.onclick = () => { if(currentAnswerCount > 2) { currentAnswerCount--; renderAnswerInputs(); }};
+document.getElementById("saveQuestionBtn").onclick = () => {
+  const text = document.getElementById("questionInput").value.trim();
+  const all = loadQuizzes();
+  const active = getActive();
+  if(!text || !active) return alert("Chybí otázka nebo vybraný test!");
 
-// Saving Logic
-saveQuestionBtn.onclick = () => {
-  const qText = questionInput.value.trim();
-  if(!qText) return alert("Chybí otázka!");
-  
-  const type = qTypeSelect.value;
-  let newQ = { question: qText, type: type };
-
-  if(type === "choice") {
-    const answers = {}, correct = [];
-    const inputs = answersContainer.querySelectorAll("input[type=text]");
-    const checks = answersContainer.querySelectorAll("input[type=checkbox]");
-    let filled = 0;
-
-    inputs.forEach((inp, i) => {
-      if(inp.value.trim()){
-        answers[LETTERS[i]] = inp.value.trim();
-        if(checks[i].checked) correct.push(LETTERS[i]);
-        filled++;
+  let newQ = { question: text, type: qTypeSelect.value };
+  if(qTypeSelect.value === "choice"){
+    let ans = {}, corr = [];
+    document.querySelectorAll("#answersContainer > div").forEach((div, i) => {
+      const val = div.querySelector("input[type=text]").value.trim();
+      if(val){
+        ans[LETTERS[i]] = val;
+        if(div.querySelector("input[type=checkbox]").checked) corr.push(LETTERS[i]);
       }
     });
-
-    if(filled < 2) return alert("Vyplň aspoň 2 odpovědi.");
-    if(correct.length === 0) return alert("Označ aspoň jednu správnou.");
-    
-    newQ.answers = answers;
-    newQ.correct = correct;
-
+    newQ.answers = ans; newQ.correct = corr;
   } else {
-    // Open text question
-    const correctText = textCorrectInput.value.trim();
-    if(!correctText) return alert("Musíš zadat správnou odpověď.");
-    newQ.correct = correctText; // Store as string
+    newQ.correct = document.getElementById("textCorrectInput").value.trim();
   }
 
-  const q = loadQuizzes();
-  q[getActive()].push(newQ);
-  saveQuizzes(q);
-  
-  // Reset
-  questionInput.value = "";
-  textCorrectInput.value = "";
-  currentAnswerCount = 2; 
-  renderAnswerInputs();
-  questionInput.focus();
-};
-
-createQuizBtn.onclick = () => {
-  const n = newQuizName.value.trim();
-  if(!n) return;
-  const q = loadQuizzes();
-  if(q[n]) return alert("Už existuje.");
-  q[n] = []; saveQuizzes(q); setActive(n); newQuizName.value = "";
-};
-
-deleteQuizBtn.onclick = () => {
-  if(!confirm("Smazat?")) return;
-  const q = loadQuizzes();
-  delete q[getActive()];
-  if(!Object.keys(q).length) q["Nový test"] = [];
-  saveQuizzes(q); setActive(Object.keys(q)[0]);
+  all[active].push(newQ);
+  saveQuizzes(all);
+  document.getElementById("questionInput").value = "";
 };
 
 function render(){
-  const q = loadQuizzes();
-  const act = getActive();
-  
-  quizSelect.innerHTML = "";
-  Object.keys(q).forEach(n => {
-    const o = document.createElement("option");
-    o.value = n; o.innerText = n;
-    quizSelect.appendChild(o);
+  const all = loadQuizzes();
+  const act = getActive() || Object.keys(all)[0];
+  const sel = document.getElementById("quizSelect");
+  sel.innerHTML = "";
+  Object.keys(all).forEach(k => {
+    const o = document.createElement("option"); o.value = k; o.innerText = k;
+    sel.appendChild(o);
   });
-  quizSelect.value = act;
-
-  const list = q[act] || [];
-  countEl.innerText = list.length;
-  listEl.innerHTML = "";
+  sel.value = act;
   
-  list.slice().reverse().forEach((item, revI) => {
-    const realI = list.length - 1 - revI;
-    const div = document.createElement("div");
-    div.className = "item";
-    
-    let content = "";
-    if(item.type === "text"){
-      content = `<div class="row"><span class="pill ok">Odpověď: ${item.correct}</span></div>`;
-    } else {
-      let badges = "";
-      // Fallback for old data without 'answers'
-      const answers = item.answers || {}; 
-      const correctArr = Array.isArray(item.correct) ? item.correct : [item.correct];
-      
-      Object.keys(answers).forEach(k => {
-        const isOk = correctArr.includes(k);
-        badges += `<span class="pill ${isOk?'ok':''}">${k}) ${answers[k]}</span>`;
-      });
-      content = `<div class="row">${badges}</div>`;
-    }
-
-    div.innerHTML = `<div class="item-head">
-      <strong>${item.type==='text'?'[Psaní] ':''}${item.question}</strong>
-      <button class="btn danger small" onclick="delQ(${realI})">X</button>
-    </div>${content}`;
-    listEl.appendChild(div);
+  const list = all[act] || [];
+  document.getElementById("count").innerText = list.length;
+  const listEl = document.getElementById("list");
+  listEl.innerHTML = "";
+  list.forEach((q, i) => {
+    const d = document.createElement("div");
+    d.style.cssText = "background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; margin-bottom:10px; display:flex; justify-content:space-between";
+    d.innerHTML = `<span>${q.question}</span><button class="btn" onclick="deleteQ(${i})" style="background:#ef4444; color:white; padding:5px 15px">Smazat</button>`;
+    listEl.appendChild(d);
   });
 }
 
-window.delQ = (i) => {
-  const q = loadQuizzes(); q[getActive()].splice(i,1); saveQuizzes(q);
-};
-quizSelect.onchange = (e) => { setActive(e.target.value); render(); };
-
-document.getElementById("clearQuestionsBtn").onclick = () => {
-  if(confirm("Smazat všechny otázky v tomto testu?")) {
-    const q = loadQuizzes(); q[getActive()] = []; saveQuizzes(q);
-  }
+window.deleteQ = (i) => {
+  const all = loadQuizzes();
+  all[getActive()].splice(i, 1);
+  saveQuizzes(all);
 };
 
-seedBtn.onclick = () => {
-  const q = loadQuizzes();
-  q[getActive()] = [
-    { question: "Co je ovoce?", type:"choice", answers: {a:"Jablko",b:"Auto",c:"Hruška"}, correct: ["a","c"] },
-    { question: "Hlavní město ČR?", type:"text", correct: "Praha" }
-  ];
+document.getElementById("createQuizBtn").onclick = () => {
+  const n = document.getElementById("newQuizName").value.trim();
+  if(!n) return;
+  const q = loadQuizzes(); q[n] = [];
+  localStorage.setItem(STORE.ACTIVE, n);
   saveQuizzes(q);
 };
 
-exportBtn.onclick = () => {
-  const d = { name: getActive(), questions: loadQuizzes()[getActive()] };
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], {type:"application/json"}));
-  a.download = "test.json"; a.click();
+document.getElementById("addAnsBtn").onclick = () => { currentAnswerCount++; renderAnsInputs(); };
+document.getElementById("remAnsBtn").onclick = () => { if(currentAnswerCount>1) currentAnswerCount--; renderAnsInputs(); };
+
+document.getElementById("quizSelect").onchange = (e) => {
+  localStorage.setItem(STORE.ACTIVE, e.target.value);
+  render();
 };
 
-importFile.onchange = (e) => {
-  const r = new FileReader();
-  r.onload = (ev) => {
-    try {
-      const d = JSON.parse(ev.target.result);
-      const q = loadQuizzes();
-      q[d.name || "Import"] = d.questions;
-      saveQuizzes(q); setActive(d.name); alert("Nahráno!");
-    } catch(e) { alert("Chyba souboru"); }
-  };
-  r.readAsText(e.target.files[0]);
-};
+renderAnsInputs();
+render();
