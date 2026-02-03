@@ -10,34 +10,25 @@
   <header class="topbar">
     <div class="brand">
       <h1>📝 Kvíz</h1>
-      <div class="sub">Opakují se jen špatně zodpovězené otázky</div>
+      <div class="sub">Statistika úspěšnosti + opravování chyb</div>
     </div>
-
     <div class="top-controls">
       <div class="select-wrap">
         <select id="quizSelect" title="Vyber test"></select>
       </div>
-
-      <button id="themeBtn" class="btn ghost icon-btn" type="button" title="Přepnout režim">
-        🌙 / ☀️
-      </button>
-
+      <button id="themeBtn" class="btn ghost icon-btn" type="button" title="Přepnout režim">🌙 / ☀️</button>
       <nav class="nav">
         <a href="index.html" class="active">Test</a>
         <a href="admin.html">Správa</a>
       </nav>
     </div>
   </header>
-
   <main class="container">
-    <div id="quiz" class="card">
-      </div>
-
-    <div class="actions center-actions">
-      <button id="restartBtn" class="btn big" type="button">Restartovat test</button>
+    <div id="quiz" class="card"></div>
+    <div class="actions center-actions" style="justify-content:center; margin-top:20px;">
+      <button id="restartBtn" class="btn big" type="button" style="display:none;">Restartovat test</button>
     </div>
   </main>
-  
   <script src="app.js"></script>
 </body>
 </html>
