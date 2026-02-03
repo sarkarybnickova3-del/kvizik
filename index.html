@@ -1,22 +1,45 @@
 <!DOCTYPE html>
 <html lang="cs" data-theme="dark">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Kvíz</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <select id="quizSelect"></select>
+    <div class="left">
+      <div class="brand">Kvízík</div>
+      <div class="pill">
+        <label class="sr-only" for="quizSelect">Vybrat test</label>
+        <select id="quizSelect"></select>
+      </div>
+    </div>
+
     <nav class="nav">
-      <a href="index.html" class="active">Test</a>
+      <a class="active" href="index.html">Test</a>
       <a href="admin.html">Správa</a>
     </nav>
+
+    <div class="right">
+      <button id="themeBtn" class="btn ghost" type="button" title="Světlý / tmavý režim">🌙/☀️</button>
+    </div>
   </header>
+
   <main class="container">
-    <div id="quiz" class="quiz-card"></div>
-    <button id="restartBtn" class="btn primary xl hidden">Zkusit znovu</button>
+    <section class="card">
+      <div id="quiz"></div>
+
+      <div class="row" id="controlsRow">
+        <button id="restartBtn" class="btn" type="button">Restart</button>
+      </div>
+    </section>
+
+    <p class="hint">
+      Tip: otázky a testy upravíš ve <a href="admin.html">Správě</a>. Data jsou uložená v prohlížeči (LocalStorage).
+    </p>
   </main>
+
   <script src="app.js"></script>
 </body>
 </html>
