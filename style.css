@@ -23,7 +23,6 @@ body {
   background: var(--bg); 
   color: var(--text); 
   margin: 0; 
-  transition: background 0.3s;
 }
 
 .topbar { 
@@ -33,46 +32,39 @@ body {
 
 .container { max-width: 700px; margin: 2rem auto; padding: 0 1rem; }
 
-.card, .step-card { 
+/* Karta kvízu */
+.quiz-card { 
   background: var(--card); border-radius: var(--radius); 
-  padding: 2rem; border: 1px solid var(--border); margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  padding: 2rem; border: 1px solid var(--border);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
 }
 
-/* Kvízové prvky */
 .quiz-q-title { font-size: 1.8rem; text-align: center; margin-bottom: 2rem; }
-
-.answer-btn { 
-  display: flex; align-items: center; width: 100%; padding: 1rem; 
-  margin-bottom: 0.8rem; background: var(--bg); border: 2px solid var(--border);
-  border-radius: 12px; color: var(--text); cursor: pointer; font-size: 1.1rem;
-  transition: all 0.2s;
-}
-
-.answer-btn:hover { border-color: var(--primary); }
-.answer-btn.selected { border-color: var(--primary); background: rgba(59,130,246,0.1); }
-.answer-btn.correct { border-color: var(--ok) !important; background: rgba(34,197,94,0.15) !important; }
-.answer-btn.wrong { border-color: var(--bad) !important; background: rgba(239,68,68,0.15) !important; }
 
 /* Vypisovací pole - OPRAVENO */
 .big-input {
   width: 100%; padding: 1.2rem; font-size: 1.3rem; border-radius: 12px;
   background: var(--bg); border: 2px solid var(--border); color: var(--text);
-  text-align: center; box-sizing: border-box; margin-bottom: 1rem;
+  text-align: center; box-sizing: border-box; margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
 }
 
-.input-correct { border-color: var(--ok); background: rgba(34,197,94,0.1); }
-.input-wrong { border-color: var(--bad); background: rgba(239,68,68,0.1); }
+.input-correct { border-color: var(--ok) !important; background: rgba(34,197,94,0.1) !important; }
+.input-wrong { border-color: var(--bad) !important; background: rgba(239,68,68,0.1) !important; }
 
-/* UI Prvky */
-.btn { 
-  padding: 0.8rem 1.5rem; border-radius: 10px; border: none; 
-  font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+/* Tlačítka odpovědí */
+.answer-btn { 
+  display: flex; align-items: center; width: 100%; padding: 1rem; 
+  margin-bottom: 0.8rem; background: var(--bg); border: 2px solid var(--border);
+  border-radius: 12px; color: var(--text); cursor: pointer; font-size: 1.1rem;
 }
+
+.answer-btn.selected { border-color: var(--primary); background: rgba(59,130,246,0.1); }
+.answer-btn.correct { border-color: var(--ok) !important; background: rgba(34,197,94,0.15) !important; }
+.answer-btn.wrong { border-color: var(--bad) !important; background: rgba(239,68,68,0.15) !important; }
+
+/* Obecná tlačítka */
+.btn { padding: 0.8rem 1.5rem; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; }
 .btn.primary { background: var(--primary); color: white; }
-.btn.xl { width: 100%; padding: 1.2rem; font-size: 1.1rem; }
+.btn.xl { width: 100%; padding: 1.2rem; font-size: 1.1rem; margin-top: 1rem; }
 .hidden { display: none !important; }
-input[type="text"], select { 
-  width: 100%; padding: 0.8rem; border-radius: 8px; 
-  background: var(--bg); color: var(--text); border: 1px solid var(--border);
-}
