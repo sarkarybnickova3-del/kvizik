@@ -10,7 +10,7 @@
   <header class="topbar">
     <div class="brand">
       <h1>⚙️ Editor Testů</h1>
-      <div class="sub">Tvorba otázek s více odpověďmi</div>
+      <div class="sub">Nyní s podporou otevřených otázek</div>
     </div>
     <div class="top-controls">
       <button id="themeBtn" class="btn ghost icon-btn" type="button">🌙 / ☀️</button>
@@ -50,17 +50,31 @@
       <div class="step-badge">2</div>
       <div class="step-content">
         <h2>Přidat otázku</h2>
-        <p class="hint">Otázka může mít více správných odpovědí. Zaškrtni je.</p>
-
+        
         <label>Znění otázky</label>
         <input id="questionInput" class="main-input" placeholder="Zadej otázku..." />
 
-        <div id="answersContainer" class="answers-editor">
-          </div>
+        <div class="type-switch">
+          <label>Typ odpovědi:</label>
+          <select id="qTypeSelect" style="width:auto; display:inline-block;">
+            <option value="choice">🔠 Výběr z možností (A, B, C...)</option>
+            <option value="text">✍️ Otevřená otázka (napsat text)</option>
+          </select>
+        </div>
 
-        <div class="actions" style="margin-top:10px;">
-          <button id="addAnsBtn" class="btn ghost" type="button">+ Možnost</button>
-          <button id="remAnsBtn" class="btn ghost danger-text" type="button">- Odebrat</button>
+        <div id="choiceContainer">
+          <p class="hint">Přidej možnosti a zaškrtni správné odpovědi.</p>
+          <div id="answersContainer" class="answers-editor"></div>
+          <div class="actions" style="margin-top:10px;">
+            <button id="addAnsBtn" class="btn ghost" type="button">+ Možnost</button>
+            <button id="remAnsBtn" class="btn ghost danger-text" type="button">- Odebrat</button>
+          </div>
+        </div>
+
+        <div id="textContainer" class="hidden">
+          <p class="hint">Napiš správnou odpověď (uživatel ji bude muset přesně napsat).</p>
+          <input id="textCorrectInput" placeholder="Např. Karel IV." />
+          <p class="hint small">Systém nebude řešit velká/malá písmena.</p>
         </div>
 
         <hr class="spacer"/>
