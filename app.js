@@ -1,220 +1,144 @@
-// app.js — Testování (více testů + auto přepínání + theme toggle)
-
-const STORE = {
-  QUIZZES: "quizzes_v1",          // { [name]: Question[] }
-  ACTIVE: "active_quiz_v1",       // string
-  THEME: "theme_v1"               // "dark" | "light"
-};
-
+const STORE = { QUIZZES: "quizzes_v2", ACTIVE: "active_quiz_v2", THEME: "theme_v2" };
 const quizDiv = document.getElementById("quiz");
 const restartBtn = document.getElementById("restartBtn");
 const quizSelect = document.getElementById("quizSelect");
-const themeBtn = document.getElementById("themeBtn");
 
-let pool = [];
-let index = 0;
-let wrongQueue = [];
-let locked = false;
-let autoTimer = null;
+let pool = [], index = 0, wrongQueue = [], locked = false;
 
-function loadTheme(){
-  const t = localStorage.getItem(STORE.THEME) || "dark";
-  document.documentElement.setAttribute("data-theme", t);
-}
-function toggleTheme(){
-  const curr = document.documentElement.getAttribute("data-theme") || "dark";
-  const next = curr === "dark" ? "light" : "dark";
-  document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem(STORE.THEME, next);
-}
+// Init
+loadTheme();
+init();
 
-function loadQuizzes(){
-  const raw = localStorage.getItem(STORE.QUIZZES);
-  try{
-    const parsed = raw ? JSON.parse(raw) : {};
-    return (parsed && typeof parsed === "object") ? parsed : {};
-  }catch{
-    return {};
-  }
-}
+function loadTheme(){ document.documentElement.setAttribute("data-theme", localStorage.getItem(STORE.THEME) || "dark"); }
+document.getElementById("themeBtn").onclick = () => {
+  const n = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", n); localStorage.setItem(STORE.THEME, n);
+};
 
-function saveQuizzes(obj){
-  localStorage.setItem(STORE.QUIZZES, JSON.stringify(obj));
-}
-
-function getActiveQuizName(){
-  return localStorage.getItem(STORE.ACTIVE) || "";
-}
-function setActiveQuizName(name){
-  localStorage.setItem(STORE.ACTIVE, name);
-}
-
-function ensureDefaultQuiz(){
-  const quizzes = loadQuizzes();
-  const keys = Object.keys(quizzes);
-  if (keys.length === 0){
-    quizzes["Můj test"] = [];
-    saveQuizzes(quizzes);
-  }
-  if (!getActiveQuizName() || !(getActiveQuizName() in quizzes)){
-    setActiveQuizName(Object.keys(quizzes)[0]);
-  }
-}
-
-function shuffle(arr){
-  for (let i = arr.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function renderQuizSelect(){
-  const quizzes = loadQuizzes();
-  const names = Object.keys(quizzes);
-
+function init(){
+  const all = JSON.parse(localStorage.getItem(STORE.QUIZZES) || "{}");
+  
+  // Fill Select
   quizSelect.innerHTML = "";
-  names.forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    quizSelect.appendChild(opt);
+  Object.keys(all).forEach(n => {
+    const o = document.createElement("option");
+    o.value = n; o.innerText = n;
+    quizSelect.appendChild(o);
   });
-
-  quizSelect.value = getActiveQuizName();
+  
+  const act = localStorage.getItem(STORE.ACTIVE) || Object.keys(all)[0];
+  if(act) quizSelect.value = act;
+  
+  startQuiz();
 }
 
-function loadActivePool(){
-  const quizzes = loadQuizzes();
-  const name = getActiveQuizName();
-  const list = quizzes[name] || [];
-  pool = shuffle([...list]);
-  index = 0;
-  wrongQueue = [];
-  locked = false;
-  clearTimeout(autoTimer);
+quizSelect.onchange = (e) => {
+  localStorage.setItem(STORE.ACTIVE, e.target.value);
+  startQuiz();
+};
+
+function startQuiz(){
+  const all = JSON.parse(localStorage.getItem(STORE.QUIZZES) || "{}");
+  const act = localStorage.getItem(STORE.ACTIVE);
+  const data = all[act] || [];
+  
+  // Normalizace dat (pro případ starých formátů)
+  pool = data.map(q => ({
+    question: q.question,
+    answers: q.answers || {a:q.a, b:q.b, c:q.c, d:q.d}, // fallback
+    correct: Array.isArray(q.correct) ? q.correct : [q.correct]
+  })).sort(() => Math.random() - 0.5);
+
+  index = 0; wrongQueue = []; locked = false;
+  renderQ();
 }
 
-function ensureQuestions(){
-  const quizzes = loadQuizzes();
-  const name = getActiveQuizName();
-  const list = quizzes[name] || [];
-
-  if (!list.length){
-    quizDiv.innerHTML = `
-      <h2>V testu „${escapeHtml(name)}“ nejsou žádné otázky</h2>
-      <p class="hint">Přidej je ve <a href="admin.html">Správě</a>.</p>
-    `;
-    restartBtn.disabled = true;
-    return false;
-  }
-  restartBtn.disabled = false;
-  return true;
-}
-
-function renderQuestion(){
-  if (!ensureQuestions()) return;
-
-  locked = false;
+function renderQ(){
   quizDiv.innerHTML = "";
+  restartBtn.style.display = "none";
 
-  // konec kola
-  if (index >= pool.length){
-    if (wrongQueue.length > 0){
-      pool = shuffle([...wrongQueue]);
-      wrongQueue = [];
-      index = 0;
-      alert("Opakují se otázky, které byly špatně.");
+  if(index >= pool.length){
+    if(wrongQueue.length){
+      alert("Opakování chyb.");
+      pool = wrongQueue.sort(() => Math.random() - 0.5);
+      wrongQueue = []; index = 0;
     } else {
-      quizDiv.innerHTML = `<h2>🎉 Hotovo!</h2><p class="hint">Všechny otázky byly zodpovězeny správně.</p>`;
-      locked = true;
+      quizDiv.innerHTML = "<div style='text-align:center; padding:40px'><h2>Hotovo! 🎉</h2></div>";
+      restartBtn.style.display = "inline-block";
       return;
     }
   }
 
   const q = pool[index];
+  locked = false;
 
-  const title = document.createElement("h2");
-  title.className = "q-title";
-  title.textContent = q.question;
+  const h2 = document.createElement("h2");
+  h2.textContent = q.question;
+  quizDiv.appendChild(h2);
+
+  const sub = document.createElement("p");
+  sub.className = "sub";
+  sub.innerText = q.correct.length > 1 ? "Více správných odpovědí" : "Jedna správná odpověď";
+  quizDiv.appendChild(sub);
+
+  const grid = document.createElement("div");
+  grid.className = "answers-grid";
+  
+  Object.keys(q.answers).forEach(key => {
+    const btn = document.createElement("button");
+    btn.className = "answer-btn";
+    btn.dataset.k = key;
+    btn.innerHTML = `<span class="letter">${key.toUpperCase()}</span> ${q.answers[key]}`;
+    btn.onclick = () => {
+      if(locked) return;
+      btn.classList.toggle("selected");
+    };
+    grid.appendChild(btn);
+  });
+  quizDiv.appendChild(grid);
 
   const wrap = document.createElement("div");
-  wrap.className = "answers";
-
-  const letters = ["a","b","c","d"];
-  letters.forEach(letter => {
-    const btn = document.createElement("button");
-    btn.className = "btn answer";
-    btn.innerHTML = `<span class="letter">${letter.toUpperCase()}</span><span class="txt">${escapeHtml(q[letter])}</span>`;
-    btn.addEventListener("click", () => handleAnswer(btn, letter, q.correct));
-    wrap.appendChild(btn);
-  });
-
-  quizDiv.appendChild(title);
+  wrap.className = "confirm-wrapper";
+  const confirmBtn = document.createElement("button");
+  confirmBtn.className = "btn primary xl";
+  confirmBtn.innerText = "Potvrdit";
+  confirmBtn.onclick = evaluate;
+  wrap.appendChild(confirmBtn);
   quizDiv.appendChild(wrap);
 }
 
-function handleAnswer(clickedBtn, selected, correct){
-  if (locked) return;
-  locked = true;
-
+function evaluate(){
+  if(locked) return;
   const q = pool[index];
-  const buttons = [...quizDiv.querySelectorAll("button.answer")];
+  const btns = Array.from(document.querySelectorAll(".answer-btn"));
+  const selected = btns.filter(b => b.classList.contains("selected")).map(b => b.dataset.k);
+  
+  if(!selected.length) return alert("Vyber něco.");
+  
+  locked = true;
+  document.querySelector(".confirm-wrapper").remove(); // Skrýt potvrdit
 
-  // zamknout tlačítka
-  buttons.forEach(b => b.disabled = true);
+  const correctSet = new Set(q.correct);
+  const selectedSet = new Set(selected);
+  
+  let isPerfect = (correctSet.size === selectedSet.size) && selected.every(x => correctSet.has(x));
 
-  // zvýraznit správnou
-  const correctText = q[correct];
-  buttons.forEach(b => {
-    const txt = b.querySelector(".txt")?.textContent?.trim();
-    if (txt === correctText) {
+  btns.forEach(b => {
+    const k = b.dataset.k;
+    if(correctSet.has(k)) {
       b.classList.add("correct");
-      b.insertAdjacentHTML("beforeend", ` <span aria-hidden="true">✅</span>`);
+      if(!selectedSet.has(k)) b.classList.add("missed"); // Měl vybrat, ale nevybral
+    } else if(selectedSet.has(k)){
+      b.classList.add("wrong"); // Vybral, ale neměl
     }
   });
 
-  // když špatně, zvýraznit kliknutou
-  if (selected !== correct){
-    clickedBtn.classList.add("wrong");
-    clickedBtn.insertAdjacentHTML("beforeend", ` <span aria-hidden="true">❌</span>`);
-    wrongQueue.push(q);
-  }
+  if(!isPerfect) wrongQueue.push(q);
 
-  // auto přepnutí na další otázku
-  clearTimeout(autoTimer);
-  autoTimer = setTimeout(() => {
+  setTimeout(() => {
     index++;
-    renderQuestion();
-  }, 650);
+    renderQ();
+  }, 2500);
 }
 
-function escapeHtml(str){
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-/* Events */
-quizSelect.addEventListener("change", () => {
-  setActiveQuizName(quizSelect.value);
-  loadActivePool();
-  renderQuestion();
-});
-
-restartBtn.addEventListener("click", () => {
-  loadActivePool();
-  renderQuestion();
-});
-
-themeBtn.addEventListener("click", toggleTheme);
-
-/* init */
-loadTheme();
-ensureDefaultQuiz();
-renderQuizSelect();
-loadActivePool();
-renderQuestion();
+restartBtn.onclick = startQuiz;
