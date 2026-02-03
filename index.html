@@ -2,20 +2,20 @@
 <html lang="cs" data-theme="dark">
 <head>
   <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kvíz</title>
+  <title>Kvízový Systém</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <select id="quizSelect" style="width: auto; margin: 0;"></select>
-    <nav class="nav">
-      <a href="index.html" class="active">Test</a>
-      <a href="admin.html">Správa</a>
+    <select id="quizSelect" style="width: auto;"></select>
+    <nav style="display:flex; gap:10px">
+      <button onclick="location.href='index.html'" class="btn primary">Test</button>
+      <button onclick="location.href='admin.html'" class="btn">Správa</button>
     </nav>
-    <button id="themeBtn" class="btn">🌙</button>
+    <button id="themeBtn" class="btn">🌓</button>
   </header>
   <main class="container">
-    <div id="quiz"></div>
+    <div id="quiz" class="card"></div>
     <button id="restartBtn" class="btn primary xl hidden">Zkusit znovu</button>
   </main>
   <script src="app.js"></script>
