@@ -15,11 +15,10 @@
 
     <div class="top-controls">
       <div class="select-wrap">
-        <label for="quizSelect" class="sr-only">Vyber test</label>
         <select id="quizSelect" title="Vyber test"></select>
       </div>
 
-      <button id="themeBtn" class="btn big ghost" type="button" title="Přepnout světlý/tmavý režim">
+      <button id="themeBtn" class="btn ghost icon-btn" type="button" title="Přepnout režim">
         🌙 / ☀️
       </button>
 
@@ -31,17 +30,14 @@
   </header>
 
   <main class="container">
-    <div id="quiz" class="card"></div>
+    <div id="quiz" class="card">
+      </div>
 
-    <div class="actions">
-      <button id="restartBtn" class="btn big" type="button">Restart testu</button>
+    <div class="actions center-actions">
+      <button id="restartBtn" class="btn big" type="button">Restartovat test</button>
     </div>
-
-    <p class="hint">
-      Tip: otázky a testy vytváříš ve <a href="admin.html">Správě</a>. Vše se ukládá do prohlížeče (LocalStorage).
-    </p>
   </main>
-
+  
   <script src="app.js"></script>
 </body>
 </html>
