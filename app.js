@@ -4,7 +4,7 @@ const restartBtn = document.getElementById("restartBtn");
 const quizSelect = document.getElementById("quizSelect");
 
 let pool = [], index = 0, wrongQueue = [], locked = false;
-// Nová statistika: počítáme celkové pokusy a celkové úspěchy
+// Statistiky: počítáme celkové pokusy a celkové úspěchy pro přesný výpočet %
 let stats = { totalAttempts: 0, successfulAttempts: 0 }; 
 
 loadTheme();
@@ -57,7 +57,7 @@ function renderQ(){
 
   if(index >= pool.length){
     if(wrongQueue.length){
-      // Opravné kolo
+      // Opravné kolo (chyby se vrací do oběhu)
       pool = wrongQueue.sort(() => Math.random() - 0.5);
       wrongQueue = []; index = 0;
       const banner = document.createElement("div");
@@ -65,16 +65,18 @@ function renderQ(){
       banner.innerText = "🔧 Opravné kolo: Procvičujeme chyby";
       quizDiv.appendChild(banner);
     } else {
-      // Konec - Výpočet procent z celkových pokusů
+      // Výpočet procent z celkových pokusů (úspěchy / pokusy)
       const percent = stats.totalAttempts > 0 
         ? Math.round((stats.successfulAttempts / stats.totalAttempts) * 1000) / 10 : 0;
       
       quizDiv.innerHTML = `
-        <div style='text-align:center; padding:40px'>
-          <div style="font-size:3.5rem; font-weight:bold; color:var(--primary);">${percent}%</div>
+        <div class="stats-final">
+          <div class="percent-circle">${percent}%</div>
           <h2>Test dokončen!</h2>
-          <p class="hint">Celkem pokusů: ${stats.totalAttempts}</p>
-          <p class="hint">Z toho správných: ${stats.successfulAttempts}</p>
+          <div class="stats-grid">
+            <div class="stat-box"><span>Pokusů celkem</span><strong>${stats.totalAttempts}</strong></div>
+            <div class="stat-box"><span>Správně potvrzeno</span><strong>${stats.successfulAttempts}</strong></div>
+          </div>
         </div>`;
       restartBtn.style.display = "inline-block";
       return;
@@ -96,7 +98,8 @@ function renderQ(){
     input.type = "text";
     input.id = "userTextInput";
     input.className = "quiz-input";
-    input.placeholder = "Napiš odpověď a potvrď...";
+    input.placeholder = "Napiš odpověď...";
+    input.autocomplete = "off";
     input.addEventListener("keyup", (e) => { if(e.key === "Enter") evaluate(); });
     wrap.appendChild(input);
   } else {
@@ -126,7 +129,6 @@ function renderQ(){
 function evaluate(){
   if(locked) return;
   const q = pool[index];
-  
   let isCorrect = false;
   const confirmBtn = document.getElementById("confirmBtn");
 
@@ -134,7 +136,7 @@ function evaluate(){
     const input = document.getElementById("userTextInput");
     const val = input.value.trim().toLowerCase();
     const correctVal = String(q.correct).trim().toLowerCase();
-    if(!val) return; // Nedělat nic, dokud není nic napsáno
+    if(!val) return; 
     
     locked = true;
     isCorrect = (val === correctVal);
@@ -168,12 +170,12 @@ function evaluate(){
     });
   }
 
-  // LOGIKA STATISTIK (Dle tvého přání)
-  stats.totalAttempts++; // Každé kliknutí na "Potvrdit" je pokus
+  // LOGIKA STATISTIK
+  stats.totalAttempts++; 
   if(isCorrect) {
     stats.successfulAttempts++; 
   } else {
-    wrongQueue.push(q); // Pokud je špatně, jde do fronty na opravu
+    wrongQueue.push(q); 
   }
 
   confirmBtn.style.display = "none";
