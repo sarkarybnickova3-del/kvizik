@@ -1,27 +1,31 @@
-# Quiz App (HTML/CSS/JS)
+# Kvíz (více testů) — HTML/CSS/JS
 
-Jednoduchý test:
+✅ Funkce:
+- Více testů (např. Čeština / ICT / POS) — přepínání v rozbalovacím menu
 - 4 odpovědi A–D
-- správně = zelená a můžeš dál
-- špatně = červená + zvýrazní se správná, otázka se zařadí na opakování
-- špatné otázky se opakují, dokud nejsou správně
-- `admin.html` slouží pro tvorbu testu (ukládá se do LocalStorage)
+- Správně = zeleně, špatně = červeně + vždy se ukáže správná
+- Špatné otázky se opakují, dokud nejsou správně
+- Otázky se po odpovědi automaticky přepnou na další
+- Přepínač světlý / tmavý režim (ukládá se do prohlížeče)
+- Export/Import pro jednotlivý test (Uložit/Načíst)
 
-## Spuštění lokálně
-Otevři `admin.html` a vytvoř otázky, potom `index.html`.
+## Soubory
+- `index.html` — testování
+- `admin.html` — správa (tvorba více testů + otázky + uložit/načíst)
+- `style.css` — styly + theme
+- `app.js` — logika testu
+- `admin.js` — logika správy
 
-## GitHub Pages (zobrazení jako web)
-1. Na GitHubu vytvoř nový repozitář (Public), např. `quiz-app`.
-2. Nahraj do něj soubory z této složky.
-3. Otevři **Settings → Pages**.
-4. V části **Build and deployment**:
-   - **Source:** `Deploy from a branch`
-   - **Branch:** `main` a `/ (root)`
-5. Uložit. GitHub ti zobrazí URL stránky.
+## GitHub Pages
+1. Nahraj soubory do rootu repozitáře
+2. Settings → Pages
+3. Source: Deploy from a branch
+4. Branch: main, Folder: / (root)
+5. Save
 
-Stránka bude typicky:
-`https://TVUJ-UCET.github.io/quiz-app/`
+Web:
+- Test: `.../`
+- Správa: `.../admin.html`
 
-## Poznámky
-- Data jsou v prohlížeči (LocalStorage). Každý prohlížeč/zařízení má své vlastní.
-- V adminu je export/import JSON pro snadný přenos otázek.
+## Poznámka
+Data jsou v LocalStorage — tedy v daném zařízení/prohlížeči. Pro přenos použij „Uložit test“ (export) a „Načíst test“ (import).

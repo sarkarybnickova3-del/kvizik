@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kvíz</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>📝 Kvíz</h1>
+      <div class="sub">Opakují se jen špatně zodpovězené otázky</div>
+    </div>
+
+    <div class="top-controls">
+      <div class="select-wrap">
+        <label for="quizSelect" class="sr-only">Vyber test</label>
+        <select id="quizSelect" title="Vyber test"></select>
+      </div>
+
+      <button id="themeBtn" class="btn big ghost" type="button" title="Přepnout světlý/tmavý režim">
+        🌙 / ☀️
+      </button>
+
+      <nav class="nav">
+        <a href="index.html" class="active">Test</a>
+        <a href="admin.html">Správa</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="quiz" class="card"></div>
+
+    <div class="actions">
+      <button id="restartBtn" class="btn big" type="button">Restart testu</button>
+    </div>
+
+    <p class="hint">
+      Tip: otázky a testy vytváříš ve <a href="admin.html">Správě</a>. Vše se ukládá do prohlížeče (LocalStorage).
+    </p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
