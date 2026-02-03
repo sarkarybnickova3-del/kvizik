@@ -23,8 +23,7 @@ quizSelect.onchange = (e) => { localStorage.setItem(STORE.ACTIVE, e.target.value
 
 function startQuiz(){
   const all = JSON.parse(localStorage.getItem(STORE.QUIZZES) || "{}");
-  const data = all[quizSelect.value] || [];
-  pool = [...data].sort(() => Math.random() - 0.5);
+  pool = [...(all[quizSelect.value] || [])].sort(() => Math.random() - 0.5);
   stats = { totalAttempts: 0, successfulAttempts: 0 };
   index = 0; wrongQueue = []; locked = false;
   renderQ();
@@ -36,31 +35,20 @@ function renderQ(){
     if(wrongQueue.length){
       pool = [...wrongQueue].sort(() => Math.random() - 0.5);
       wrongQueue = []; index = 0;
-      quizDiv.innerHTML = `<div style="text-align:center; color:var(--primary); font-weight:bold; margin-bottom:20px;">🔧 OPRAVNÉ KOLO</div>`;
+      quizDiv.innerHTML = `<div style="text-align:center; color:var(--primary); font-weight:bold; margin-bottom:20px;">Opravné kolo</div>`;
     } else {
       const p = stats.totalAttempts > 0 ? Math.round((stats.successfulAttempts / stats.totalAttempts) * 1000) / 10 : 0;
-      quizDiv.innerHTML = `
-        <div class="stats-final">
-          <span class="percent-display">${p}%</span>
-          <div class="stats-sub">TEST DOKONČEN</div>
-          <div class="stats-grid">
-            <div class="stat-box"><strong>${stats.successfulAttempts}</strong><span>Správně</span></div>
-            <div class="stat-box"><strong>${stats.totalAttempts}</strong><span>Pokusů</span></div>
-          </div>
-        </div>`;
+      quizDiv.innerHTML = `<div class="stats-final"><span class="percent-display">${p}%</span><h2>Hotovo!</h2><p>Pokusů: ${stats.totalAttempts} | Správně: ${stats.successfulAttempts}</p></div>`;
       restartBtn.classList.remove("hidden"); return;
     }
   }
-
   const q = pool[index]; locked = false;
   const h2 = document.createElement("h2"); h2.className = "quiz-q-title"; h2.textContent = q.question;
   quizDiv.appendChild(h2);
-
   const wrap = document.createElement("div"); wrap.id = "ansWrapper";
   if(q.type === "text"){
-    const input = document.createElement("input"); input.className = "answer-btn"; style="text-align:center";
-    input.id = "userTextInput"; input.placeholder = "Napiš odpověď a potvrď...";
-    input.onkeyup = (e) => { if(e.key === "Enter") evaluate(); };
+    const input = document.createElement("input"); input.className = "answer-btn"; input.id = "userTextInput";
+    input.placeholder = "Odpověď..."; input.onkeyup = (e) => { if(e.key === "Enter") evaluate(); };
     wrap.appendChild(input);
   } else {
     Object.keys(q.answers).forEach(k => {
@@ -72,7 +60,7 @@ function renderQ(){
   }
   quizDiv.appendChild(wrap);
   const foot = document.createElement("div"); foot.id = "actionArea";
-  foot.innerHTML = `<button onclick="evaluate()" class="btn primary xl">Potvrdit odpověď</button>`;
+  foot.innerHTML = `<button onclick="evaluate()" class="btn primary xl">Potvrdit</button>`;
   quizDiv.appendChild(foot);
 }
 
@@ -93,7 +81,7 @@ function evaluate(){
     });
   }
   locked = true; stats.totalAttempts++; if(ok) stats.successfulAttempts++; else wrongQueue.push(q);
-  document.getElementById("actionArea").innerHTML = `<button onclick="index++; renderQ();" class="btn primary xl" style="background:var(--ok)">Další otázka ➔</button>`;
+  document.getElementById("actionArea").innerHTML = `<button onclick="index++; renderQ();" class="btn primary xl" style="background:var(--ok)">Další ➔</button>`;
 }
-
+restartBtn.onclick = startQuiz;
 init();
