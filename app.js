@@ -4,7 +4,6 @@ const restartBtn = document.getElementById("restartBtn");
 const quizSelect = document.getElementById("quizSelect");
 
 let pool = [], index = 0, wrongQueue = [], locked = false;
-// Statistiky: počítáme celkové pokusy a celkové úspěchy pro přesný výpočet %
 let stats = { totalAttempts: 0, successfulAttempts: 0 }; 
 
 loadTheme();
@@ -57,7 +56,6 @@ function renderQ(){
 
   if(index >= pool.length){
     if(wrongQueue.length){
-      // Opravné kolo (chyby se vrací do oběhu)
       pool = wrongQueue.sort(() => Math.random() - 0.5);
       wrongQueue = []; index = 0;
       const banner = document.createElement("div");
@@ -65,7 +63,6 @@ function renderQ(){
       banner.innerText = "🔧 Opravné kolo: Procvičujeme chyby";
       quizDiv.appendChild(banner);
     } else {
-      // Výpočet procent z celkových pokusů (úspěchy / pokusy)
       const percent = stats.totalAttempts > 0 
         ? Math.round((stats.successfulAttempts / stats.totalAttempts) * 1000) / 10 : 0;
       
@@ -75,7 +72,7 @@ function renderQ(){
           <h2>Test dokončen!</h2>
           <div class="stats-grid">
             <div class="stat-box"><span>Pokusů celkem</span><strong>${stats.totalAttempts}</strong></div>
-            <div class="stat-box"><span>Správně potvrzeno</span><strong>${stats.successfulAttempts}</strong></div>
+            <div class="stat-box"><span>Správně</span><strong>${stats.successfulAttempts}</strong></div>
           </div>
         </div>`;
       restartBtn.style.display = "inline-block";
@@ -87,6 +84,7 @@ function renderQ(){
   locked = false;
 
   const h2 = document.createElement("h2");
+  h2.className = "quiz-q-title";
   h2.textContent = q.question;
   quizDiv.appendChild(h2);
 
@@ -97,19 +95,19 @@ function renderQ(){
     const input = document.createElement("input");
     input.type = "text";
     input.id = "userTextInput";
-    input.className = "quiz-input";
-    input.placeholder = "Napiš odpověď...";
+    input.className = "quiz-input big-input";
+    input.placeholder = "Sem napiš odpověď...";
     input.autocomplete = "off";
     input.addEventListener("keyup", (e) => { if(e.key === "Enter") evaluate(); });
     wrap.appendChild(input);
   } else {
     const grid = document.createElement("div");
-    grid.className = "answers-grid";
+    grid.className = "answers-grid big-grid";
     Object.keys(q.answers).forEach(key => {
       const btn = document.createElement("button");
-      btn.className = "answer-btn";
+      btn.className = "answer-btn big-btn";
       btn.dataset.k = key;
-      btn.innerHTML = `<span class="letter">${key.toUpperCase()}</span> ${q.answers[key]}`;
+      btn.innerHTML = `<span class="letter">${key.toUpperCase()}</span> <span class="text-val">${q.answers[key]}</span>`;
       btn.onclick = () => { if(!locked) btn.classList.toggle("selected"); };
       grid.appendChild(btn);
     });
@@ -117,10 +115,11 @@ function renderQ(){
   }
   quizDiv.appendChild(wrap);
 
-  const confirmWrap = document.createElement("div");
-  confirmWrap.className = "confirm-wrapper";
-  confirmWrap.innerHTML = `<button id="confirmBtn" class="btn primary xl">Potvrdit odpověď</button>`;
-  quizDiv.appendChild(confirmWrap);
+  const actionWrap = document.createElement("div");
+  actionWrap.className = "confirm-wrapper";
+  actionWrap.id = "actionArea";
+  actionWrap.innerHTML = `<button id="confirmBtn" class="btn primary xl">Potvrdit odpověď</button>`;
+  quizDiv.appendChild(actionWrap);
   document.getElementById("confirmBtn").onclick = evaluate;
   
   if(q.type === "text") setTimeout(() => document.getElementById("userTextInput")?.focus(), 50);
@@ -130,7 +129,6 @@ function evaluate(){
   if(locked) return;
   const q = pool[index];
   let isCorrect = false;
-  const confirmBtn = document.getElementById("confirmBtn");
 
   if(q.type === "text"){
     const input = document.getElementById("userTextInput");
@@ -144,13 +142,13 @@ function evaluate(){
     if(!isCorrect){
       const hint = document.createElement("div");
       hint.className = "correct-reveal";
-      hint.innerHTML = `Správně: <strong>${q.correct}</strong>`;
+      hint.innerHTML = `Správná odpověď: <strong>${q.correct}</strong>`;
       document.getElementById("ansWrapper").appendChild(hint);
     }
   } else {
     const btns = Array.from(document.querySelectorAll(".answer-btn"));
     const selected = btns.filter(b => b.classList.contains("selected")).map(b => b.dataset.k);
-    if(!selected.length) return alert("Vyber aspoň jednu možnost.");
+    if(!selected.length) return alert("Vyber prosím odpověď.");
 
     locked = true;
     const correctArr = Array.isArray(q.correct) ? q.correct : [q.correct];
@@ -170,20 +168,16 @@ function evaluate(){
     });
   }
 
-  // LOGIKA STATISTIK
   stats.totalAttempts++; 
-  if(isCorrect) {
-    stats.successfulAttempts++; 
-  } else {
-    wrongQueue.push(q); 
-  }
+  if(isCorrect) stats.successfulAttempts++; else wrongQueue.push(q);
 
-  confirmBtn.style.display = "none";
-
-  setTimeout(() => {
+  // Výměna tlačítka Potvrdit za Další otázka
+  const area = document.getElementById("actionArea");
+  area.innerHTML = `<button id="nextBtn" class="btn primary xl btn-next">Další otázka ➔</button>`;
+  document.getElementById("nextBtn").onclick = () => {
     index++;
     renderQ();
-  }, isCorrect ? 1200 : 3000);
+  };
 }
 
 restartBtn.onclick = startQuiz;
