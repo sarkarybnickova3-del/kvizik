@@ -3,17 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Editor Testů</title>
+  <title>Správa - Editor</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <h1>⚙️ Editor Testů</h1>
-      <div class="sub">Nyní s podporou otevřených otázek</div>
+      <h1>⚙️ Správa kvízů</h1>
+      <div class="sub">Tvorba a nastavení otázek</div>
     </div>
     <div class="top-controls">
-      <button id="themeBtn" class="btn ghost icon-btn" type="button">🌙 / ☀️</button>
+      <div class="select-container">
+        <span class="sel-label">Aktivní test:</span>
+        <select id="quizSelect"></select>
+      </div>
+      <button id="themeBtn" class="btn ghost icon-btn">🌙 / ☀️</button>
       <nav class="nav">
         <a href="index.html">Test</a>
         <a href="admin.html" class="active">Správa</a>
@@ -22,96 +26,81 @@
   </header>
 
   <main class="container">
-    
     <section class="step-card">
-      <div class="step-badge">1</div>
-      <div class="step-content">
-        <h2>Vyber nebo vytvoř test</h2>
-        <div class="grid-admin-top">
-          <div class="box">
-            <label>Aktuální test</label>
-            <select id="quizSelect" class="full-width"></select>
-            <div class="mini-actions">
-              <button id="deleteQuizBtn" class="btn danger small" type="button">Smazat test</button>
-            </div>
+      <div class="step-header">
+        <span class="step-num">1</span>
+        <h2>Správa testů</h2>
+      </div>
+      <div class="grid-2">
+        <div class="box">
+          <label>Nový test</label>
+          <div class="input-group">
+            <input id="newQuizName" placeholder="Název..." />
+            <button id="createQuizBtn" class="btn primary">Vytvořit</button>
           </div>
-          <div class="box border-left">
-            <label>Nový test</label>
-            <div class="input-group">
-              <input id="newQuizName" placeholder="Např. Dějepis" />
-              <button id="createQuizBtn" class="btn primary" type="button">Vytvořit</button>
-            </div>
-          </div>
+        </div>
+        <div class="box">
+          <label>Akce s vybraným</label>
+          <button id="deleteQuizBtn" class="btn danger full-width">Smazat celý test</button>
         </div>
       </div>
     </section>
 
     <section class="step-card">
-      <div class="step-badge">2</div>
-      <div class="step-content">
-        <h2>Přidat otázku</h2>
-        
+      <div class="step-header">
+        <span class="step-num">2</span>
+        <h2>Nová otázka</h2>
+      </div>
+      
+      <div class="field">
         <label>Znění otázky</label>
-        <input id="questionInput" class="main-input" placeholder="Zadej otázku..." />
+        <input id="questionInput" class="large-input" placeholder="O čem je tato otázka?" />
+      </div>
 
-        <div class="type-switch">
-          <label>Typ odpovědi:</label>
-          <select id="qTypeSelect" style="width:auto; display:inline-block;">
-            <option value="choice">🔠 Výběr z možností (A, B, C...)</option>
-            <option value="text">✍️ Otevřená otázka (napsat text)</option>
-          </select>
-        </div>
+      <div class="field">
+        <label>Typ odpovědi</label>
+        <select id="qTypeSelect" class="type-select">
+          <option value="choice">Výběr z možností (A, B, C...)</option>
+          <option value="text">Otevřená (napsat text)</option>
+        </select>
+      </div>
 
-        <div id="choiceContainer">
-          <p class="hint">Přidej možnosti a zaškrtni správné odpovědi.</p>
-          <div id="answersContainer" class="answers-editor"></div>
-          <div class="actions" style="margin-top:10px;">
-            <button id="addAnsBtn" class="btn ghost" type="button">+ Možnost</button>
-            <button id="remAnsBtn" class="btn ghost danger-text" type="button">- Odebrat</button>
-          </div>
+      <div id="choiceContainer" class="answer-box">
+        <label>Možnosti (zaškrtni správné)</label>
+        <div id="answersContainer"></div>
+        <div class="mini-actions">
+          <button id="addAnsBtn" class="btn small">+ Přidat</button>
+          <button id="remAnsBtn" class="btn small danger-text">- Odebrat</button>
         </div>
+      </div>
 
-        <div id="textContainer" class="hidden">
-          <p class="hint">Napiš správnou odpověď (uživatel ji bude muset přesně napsat).</p>
-          <input id="textCorrectInput" placeholder="Např. Karel IV." />
-          <p class="hint small">Systém nebude řešit velká/malá písmena.</p>
-        </div>
+      <div id="textContainer" class="answer-box hidden">
+        <label>Správná textová odpověď</label>
+        <input id="textCorrectInput" placeholder="Přesné znění odpovědi..." />
+      </div>
 
-        <hr class="spacer"/>
-
-        <div class="actions main-actions">
-          <button id="saveQuestionBtn" class="btn xl primary" type="button">✅ Uložit do testu</button>
-          <button id="seedBtn" class="btn ghost" type="button">✨ Nahrát ukázku</button>
-        </div>
-        
-        <div class="stats-bar">
-          Otázek v testu: <strong id="count">0</strong>
-        </div>
+      <div class="main-actions">
+        <button id="saveQuestionBtn" class="btn primary xl">✅ Uložit otázku do testu</button>
+        <button id="seedBtn" class="btn ghost">✨ Vložit ukázky</button>
       </div>
     </section>
 
-    <section class="card">
-      <div class="flex-head">
-        <h2>Otázky v testu</h2>
-        <button id="clearQuestionsBtn" class="btn danger small" type="button">Smazat vše</button>
+    <section class="step-card">
+      <div class="step-header">
+        <span class="step-num">3</span>
+        <h2>Seznam a Export</h2>
       </div>
-      <div id="list" class="list"></div>
-    </section>
-
-    <section class="step-card muted-card">
-      <div class="step-badge">3</div>
-      <div class="step-content">
-        <h2>Export / Import</h2>
-        <div class="actions">
-          <button id="exportBtn" class="btn" type="button">💾 Stáhnout (.json)</button>
-          <label class="file btn">
-            📥 Nahrát (.json)
-            <input id="importFile" type="file" accept="application/json" />
-          </label>
-        </div>
+      <div class="stats-mini">V testu je nyní <strong id="count">0</strong> otázek</div>
+      <div id="list" class="admin-list"></div>
+      <hr class="spacer" />
+      <div class="export-area">
+        <button id="exportBtn" class="btn">💾 Exportovat (.json)</button>
+        <label class="btn file-btn">
+          📥 Importovat (.json)
+          <input id="importFile" type="file" accept="application/json" />
+        </label>
       </div>
     </section>
-
   </main>
   <script src="admin.js"></script>
 </body>
