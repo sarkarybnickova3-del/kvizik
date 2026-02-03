@@ -13,9 +13,9 @@ document.getElementById("createQuizBtn").onclick = () => {
 };
 
 document.getElementById("deleteQuizBtn").onclick = () => {
-  const a = getActive(); if(!a || !confirm("Smazat celý test?")) return;
+  const a = getActive(); if(!a || !confirm("Smazat test?")) return;
   const q = loadQuizzes(); delete q[a];
-  const keys = Object.keys(q); localStorage.setItem(STORE.ACTIVE, keys[0] || "");
+  localStorage.setItem(STORE.ACTIVE, Object.keys(q)[0] || "");
   saveQuizzes(q);
 };
 
@@ -25,22 +25,15 @@ document.getElementById("saveQuestionBtn").onclick = () => {
   const all = loadQuizzes();
   const type = document.getElementById("qTypeSelect").value;
   let newQ = { question: qText, type: type };
-
   if(type === "choice"){
     let ans = {}, corr = [];
     document.querySelectorAll("#answersContainer > div").forEach((div, i) => {
       const val = div.querySelector("input[type=text]").value.trim();
-      if(val){
-        ans[LETTERS[i]] = val;
-        if(div.querySelector("input[type=checkbox]").checked) corr.push(LETTERS[i]);
-      }
+      if(val){ ans[LETTERS[i]] = val; if(div.querySelector("input[type=checkbox]").checked) corr.push(LETTERS[i]); }
     });
     newQ.answers = ans; newQ.correct = corr;
-  } else {
-    newQ.correct = document.getElementById("textCorrectInput").value.trim();
-  }
+  } else { newQ.correct = document.getElementById("textCorrectInput").value.trim(); }
   all[active].push(newQ); saveQuizzes(all);
-  document.getElementById("questionInput").value = "";
 };
 
 function render(){
@@ -58,7 +51,6 @@ function render(){
     listEl.appendChild(d);
   });
 }
-
 window.deleteQ = (i) => { const q = loadQuizzes(); q[getActive()].splice(i,1); saveQuizzes(q); };
 
 document.getElementById("exportBtn").onclick = () => {
@@ -90,5 +82,4 @@ function renderAnsInputs(){
 }
 document.getElementById("addAnsBtn").onclick = () => { currentAnswerCount++; renderAnsInputs(); };
 document.getElementById("quizSelect").onchange = (e) => { localStorage.setItem(STORE.ACTIVE, e.target.value); render(); };
-
 renderAnsInputs(); render();
