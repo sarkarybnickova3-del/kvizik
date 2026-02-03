@@ -1,45 +1,85 @@
 <!DOCTYPE html>
 <html lang="cs" data-theme="dark">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Správa</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Správa testů</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <select id="quizSelect" style="width: auto; margin: 0;"></select>
+    <div class="select-container">
+      <select id="quizSelect"></select>
+    </div>
     <nav class="nav">
       <a href="index.html">Test</a>
       <a href="admin.html" class="active">Správa</a>
     </nav>
-    <button id="themeBtn" class="btn">🌙</button>
+    <button id="themeBtn" class="btn">🌙/☀️</button>
   </header>
+
   <main class="container">
     <section class="step-card">
-      <h2>1. Správa testů</h2>
-      <input id="newQuizName" type="text" placeholder="Název testu...">
-      <button id="createQuizBtn" class="btn primary" style="width:100%">Vytvořit test</button>
-      <button id="deleteQuizBtn" class="btn" style="background:#450a0a; color:#f87171; width:100%; margin-top:10px">Smazat vybraný test</button>
+      <div class="step-header">
+        <div class="step-num">1</div>
+        <h2>Správa testů</h2>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label>Název nového testu</label>
+          <input id="newQuizName" type="text" placeholder="Např. Matematika 1" />
+          <button id="createQuizBtn" class="btn primary xl">Vytvořit test</button>
+        </div>
+        <div>
+          <label>Akce</label>
+          <button id="deleteQuizBtn" class="btn xl" style="background:#450a0a; color:#f87171">Smazat vybraný test</button>
+        </div>
+      </div>
     </section>
 
     <section class="step-card">
-      <h2>2. Přidat otázku</h2>
-      <input id="questionInput" type="text" placeholder="Znění otázky...">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <h2>Přidat otázku</h2>
+      </div>
+      <label>Znění otázky</label>
+      <input id="questionInput" type="text" placeholder="Co chcete otestovat?" style="font-size:1.4rem; font-weight:bold;" />
+      
+      <label>Typ odpovědi</label>
       <select id="qTypeSelect">
-        <option value="choice">Možnosti (A,B,C...)</option>
-        <option value="text">Psaná odpověď</option>
+        <option value="choice">Výběr z možností (A, B, C...)</option>
+        <option value="text">Otevřená odpověď (vepsat text)</option>
       </select>
-      <div id="choiceArea"><div id="answersContainer"></div><button id="addAnsBtn" class="btn" style="margin-top:10px">+ Možnost</button></div>
-      <div id="textArea" class="hidden"><input id="textCorrectInput" type="text" placeholder="Správná odpověď..."></div>
-      <button id="saveQuestionBtn" class="btn primary xl">Uložit otázku</button>
+
+      <div id="choiceArea">
+        <div id="answersContainer"></div>
+        <div style="display:flex; gap:10px; margin-top:10px">
+          <button id="addAnsBtn" class="btn">+ Možnost</button>
+          <button id="remAnsBtn" class="btn">- Odebrat</button>
+        </div>
+      </div>
+
+      <div id="textArea" class="hidden">
+        <label>Správná textová odpověď</label>
+        <input id="textCorrectInput" type="text" placeholder="Přesné znění..." />
+      </div>
+
+      <button id="saveQuestionBtn" class="btn primary xl" style="margin-top:20px">✅ Uložit otázku</button>
     </section>
 
     <section class="step-card">
-      <h2>3. Seznam (<span id="count">0</span>)</h2>
-      <div id="list"></div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px">
-        <button id="exportBtn" class="btn">Export JSON</button>
-        <label class="btn" style="background:var(--border); text-align:center; cursor:pointer">Import JSON<input id="importFile" type="file" style="display:none"></label>
+      <div class="step-header">
+        <div class="step-num">3</div>
+        <h2>Seznam a Export</h2>
+        <span id="count" style="margin-left:auto; background:var(--bg); padding:5px 15px; border-radius:10px">0</span>
+      </div>
+      <div id="list" style="margin-bottom:20px"></div>
+      <div class="grid-2">
+        <button id="exportBtn" class="btn xl">💾 Exportovat JSON</button>
+        <label class="btn xl" style="background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center">
+          📥 Importovat JSON
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+        </label>
       </div>
     </section>
   </main>
