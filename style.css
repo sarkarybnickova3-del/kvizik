@@ -6,7 +6,6 @@
   --muted: #a9b4d6;
   --border: #22304a;
   --primary: #3b82f6;
-  --primary-hover: #2563eb;
   --ok: #2eaf5d;
   --bad: #e24b4b;
 }
@@ -27,16 +26,16 @@ body {
   line-height: 1.6; 
 }
 
-.container { max-width: 850px; margin: 0 auto; padding: 20px; }
-
-/* --- NOVÁ NAVIGACE A TOPBAR --- */
+/* --- CENTROVANÁ NAVIGACE --- */
 .topbar { 
   display: flex; 
-  justify-content: space-between; 
+  flex-direction: column;
   align-items: center; 
-  padding: 20px 40px; 
+  gap: 20px;
+  padding: 30px 20px; 
   background: var(--card); 
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .nav { 
@@ -50,10 +49,11 @@ body {
 .nav a { 
   text-decoration: none; 
   color: var(--muted); 
-  padding: 10px 24px; 
+  padding: 10px 35px; 
   border-radius: 10px; 
   font-weight: 700; 
   transition: 0.3s;
+  font-size: 1.1rem;
 }
 
 .nav a.active { 
@@ -62,95 +62,53 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-/* --- DESIGN SELECTU (Seznam testů) --- */
-.select-container {
-  position: relative;
-  min-width: 220px;
-}
+.select-container { width: 100%; max-width: 400px; }
 
 #quizSelect {
-  appearance: none;
   width: 100%;
-  padding: 12px 40px 12px 20px;
-  font-size: 1rem;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--border);
   font-weight: 700;
-  color: var(--text);
-  background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: 0.2s;
+  text-align: center;
 }
 
-#quizSelect:hover { border-color: var(--primary); }
-#quizSelect:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+/* --- TEST A STATISTIKA --- */
+.container { max-width: 850px; margin: 0 auto; padding: 40px 20px; }
 
-/* --- ADMIN POLE A KARTY --- */
-.step-card { 
-  background: var(--card); 
-  border-radius: var(--radius); 
-  padding: 35px; 
-  margin-bottom: 30px; 
-  border: 1px solid var(--border); 
-  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-}
-
-.step-header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
-.step-num { 
-  background: var(--primary); 
-  color: white; 
-  width: 40px; height: 40px; 
-  border-radius: 50%; 
-  display: flex; align-items: center; justify-content: center; 
-  font-weight: 900; font-size: 1.2rem;
-}
-
-input[type="text"], select:not(#quizSelect) {
-  width: 100%;
-  padding: 16px 20px;
-  font-size: 1.1rem;
-  background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  color: var(--text);
-  margin-bottom: 15px;
-  transition: 0.2s;
-}
-
-input:focus { border-color: var(--primary); outline: none; }
-
-/* --- VELKÝ TEST (Zvětšení prvků) --- */
 .quiz-q-title { font-size: 2.4rem; font-weight: 800; text-align: center; margin-bottom: 40px; }
+
 .answer-btn { 
-  padding: 22px 30px; 
-  font-size: 1.5rem; 
-  background: rgba(255,255,255,0.02); 
-  border: 2px solid var(--border); 
-  border-radius: 18px; 
-  color: var(--text); 
-  margin-bottom: 12px;
-  width: 100%;
-  display: flex; align-items: center;
-  cursor: pointer; transition: 0.2s;
+  padding: 22px; font-size: 1.5rem; background: rgba(255,255,255,0.02); 
+  border: 2px solid var(--border); border-radius: 18px; color: var(--text); 
+  margin-bottom: 15px; width: 100%; display: flex; align-items: center; cursor: pointer;
 }
 .answer-btn .letter { 
-  background: var(--border); 
-  width: 50px; height: 50px; 
-  display: flex; align-items: center; justify-content: center; 
-  border-radius: 12px; margin-right: 25px; 
-  font-weight: 800; font-size: 1.5rem;
+  background: var(--border); width: 50px; height: 50px; display: flex; 
+  align-items: center; justify-content: center; border-radius: 12px; margin-right: 25px; 
+  font-weight: 800; color: white;
 }
 .answer-btn.selected { border-color: var(--primary); background: rgba(59,130,246,0.1); }
 .answer-btn.correct { border-color: var(--ok); background: rgba(46,175,93,0.15); }
 .answer-btn.wrong { border-color: var(--bad); background: rgba(226,75,75,0.15); }
 
-.btn { 
-  padding: 15px 30px; border-radius: 14px; border: none; 
-  font-weight: 800; cursor: pointer; transition: 0.2s; 
+/* STATISTIKA FINÁLE */
+.stats-final { text-align: center; padding: 40px 0; }
+.percent-display { 
+  font-size: 7rem; font-weight: 900; color: var(--primary); 
+  display: block; line-height: 1; margin-bottom: 10px; 
 }
+.stats-grid { display: flex; justify-content: center; gap: 20px; margin: 30px 0; }
+.stat-box { 
+  background: var(--card); padding: 20px; border-radius: 20px; 
+  border: 1px solid var(--border); min-width: 150px; 
+}
+.stat-box strong { font-size: 2rem; display: block; color: var(--primary); }
+.stat-box span { font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+.btn { padding: 15px 30px; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; transition: 0.2s; }
 .btn.primary { background: var(--primary); color: white; }
 .btn.xl { width: 100%; padding: 22px; font-size: 1.4rem; }
-
-/* Pomocné třídy */
 .hidden { display: none !important; }
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
