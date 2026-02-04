@@ -4,7 +4,7 @@ Jednoduchá webová aplikace pro tvorbu a procvičování testů přímo v prohl
 Projekt je určený hlavně na **učení ke zkouškám**, opakování učiva a přípravu na testy.
 
 👉 Aplikace běží čistě v HTML, CSS a JavaScriptu – **bez backendu**.
-
+Podpoř tento projekt na https://buymeacoffee.com/berysaurus
 ---
 
 ## ✨ Funkce
