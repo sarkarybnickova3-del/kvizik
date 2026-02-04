@@ -1,24 +1,62 @@
-# Kvízík – opravená rescue verze
+# 🧠 Kvízik
 
-✅ Opraveno tak, aby to **fakt fungovalo**:
-- více testů (přepínání nahoře)
-- testování:
-  - **choice** (výběr z možností) – může mít i **více správných**
-  - **text** (otevřená odpověď) – více variant přes `;`
-- vyhodnocení:
-  - správně = zeleně
-  - špatně = červeně + ukáže se správné
-- špatné otázky se opakují, dokud nejsou správně
-- auto přepnutí na další otázku po odpovědi
-- přepínač světlý/tmavý režim
+Jednoduchá webová aplikace pro tvorbu a procvičování testů přímo v prohlížeči.  
+Projekt je určený hlavně na **učení ke zkouškám**, opakování učiva a přípravu na testy.
 
-## Nasazení na GitHub Pages
-1. Nahraj soubory do rootu repozitáře
-2. Settings → Pages → Deploy from a branch → `main` + `/ (root)`
-3. Web:
-   - Test: `/`
-   - Správa: `/admin.html`
+👉 Aplikace běží čistě v HTML, CSS a JavaScriptu – **bez backendu**.
 
-## Uložení dat
-Data jsou v LocalStorage (na zařízení/prohlížeči).
-Pro přenos použij: **Uložit test (JSON)** a na jiném zařízení **Načíst test (JSON)**.
+---
+
+## ✨ Funkce
+
+### 📝 Testování
+- výběr testu z nabídky
+- otázky typu:
+  - výběr z možností (A–D)
+  - více správných odpovědí
+  - otevřené otázky
+- okamžité vyhodnocení odpovědi
+- zvýraznění:
+  - správné odpovědi (zeleně)
+  - špatné odpovědi (červeně)
+- tlačítka **Vyhodnotit** a **Další**
+- možnost test kdykoliv restartovat
+
+---
+
+### 🛠 Správa testů
+- vytvoření více testů
+- přejmenování nebo smazání testu
+- přidávání otázek:
+  - text otázky
+  - typ otázky (ABCD / otevřená)
+  - označení jedné nebo více správných odpovědí
+- seznam všech otázek v testu
+- mazání jednotlivých otázek
+
+---
+
+### 💾 Ukládání dat
+- všechna data se ukládají do **LocalStorage prohlížeče**
+- žádné přihlašování, žádný server
+- testy zůstávají uložené i po zavření stránky
+
+---
+
+### 📦 Export / Import
+- možnost **uložit test do JSON souboru**
+- možnost **načíst test z JSON souboru**
+- ideální pro:
+  - zálohování
+  - přenos mezi zařízeními
+  - sdílení testů s ostatními
+
+
+---
+
+## 🚀 Spuštění
+Aplikace **nevyžaduje instalaci**.
+
+1. otevři `index.html` v prohlížeči  
+2. nebo ji nahraj na **GitHub Pages** a používej jako web
+
