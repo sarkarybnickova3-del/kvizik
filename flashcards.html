@@ -33,7 +33,7 @@
         <div class="muted" id="counter">0 / 0</div>
         <div class="row">
           <button id="shuffleBtn" class="btn" type="button">Zamíchat</button>
-          <button id="resetBtn" class="btn ghost" type="button">Od začátku</button>
+          <button id="resetBtn" class="btn ghost" type="button">Reset</button>
         </div>
       </div>
 
@@ -43,29 +43,30 @@
             <div class="flip-face flip-front">
               <div class="fc-label">OTÁZKA</div>
               <div id="frontText" class="fc-text"></div>
-              <div class="fc-hint">Klikni na kartu nebo stiskni Enter pro otočení.</div>
+              <div class="fc-hint">Klikni na kartu / Enter = otočit. Šipky ← → = předchozí/další.</div>
             </div>
             <div class="flip-face flip-back">
               <div class="fc-label">ODPOVĚĎ</div>
               <div id="backText" class="fc-text"></div>
-              <div class="fc-hint">Klikni znovu pro návrat.</div>
+              <div class="fc-hint">Teď dej Umím / Neumím.</div>
             </div>
           </div>
         </div>
       </div>
 
       <div class="row fc-actions">
-        <button id="flipBtn" class="btn primary" type="button">Otočit</button>
-        <button id="prevBtn" class="btn" type="button">← Předchozí</button>
-        <button id="nextBtn" class="btn" type="button">Další →</button>
+        <button id="flipBtn" class="btn" type="button">Otočit</button>
+        <button id="dontBtn" class="btn danger" type="button">Neumím</button>
+        <button id="knowBtn" class="btn primary" type="button">Umím</button>
+        <span class="badge" id="learnedBadge">0 umím</span>
       </div>
 
       <p class="hint">
-        Kartičky berou otázky z vybraného testu. U výběru z možností se na zadní straně ukážou správné odpovědi.
+        Kartičky používají otázky označené pro „Kartičky“ nebo „Obojí“ ve Správě.
       </p>
     </section>
   </main>
 
-  <script src="flashcards.js?v=1"></script>
+  <script src="flashcards.js?v=2"></script>
 </body>
 </html>

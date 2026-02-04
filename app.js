@@ -80,7 +80,8 @@ document.addEventListener("DOMContentLoaded",()=> {
 
     function start(){
       const t=getTest();
-      pool=[...(t.questions||[])];
+      const isForQuiz = (q) => { const use = q.use || "both"; return use === "quiz" || use === "both"; };
+      pool=[...((t.questions||[]).filter(isForQuiz))];
       wrong=[]; idx=0; total=0; correct=0;
       next();
     }

@@ -363,4 +363,4 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
 }
 .fc-hint{ margin-top:auto; color: var(--muted); font-weight: 700; font-size: 13px; }
 
-.fc-actions{ justify-content: flex-end; }
+.fc-actions{ justify-content: flex-end; align-items:center; }

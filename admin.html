@@ -16,10 +16,10 @@
       </div>
     </div>
 
-    <nav class="nav">
+        <nav class="nav">
       <a href="index.html">Test</a>
       <a class="active" href="admin.html">Správa</a>
-          <a href="flashcards.html">Kartičky</a>
+      <a href="flashcards.html">Kartičky</a>
     </nav>
 
     <div class="right">
@@ -64,6 +64,14 @@
         <select id="qTypeSelect">
           <option value="choice">Výběr z možností</option>
           <option value="text">Otevřená (textová odpověď)</option>
+        </select>
+
+
+        <label>Použití</label>
+        <select id="useSelect">
+          <option value="both">Obojí (Test i Kartičky)</option>
+          <option value="quiz">Jen Test</option>
+          <option value="cards">Jen Kartičky</option>
         </select>
 
         <div id="choiceArea">
@@ -123,6 +131,6 @@
     </div>
   </main>
 
-  <script src="admin.js?v=4"></script>
+  <script src="admin.js?v=5"></script>
 </body>
 </html>

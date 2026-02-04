@@ -39,6 +39,7 @@ const deleteQuizBtn = document.getElementById("deleteQuizBtn");
 
 const questionInput = document.getElementById("questionInput");
 const qTypeSelect = document.getElementById("qTypeSelect");
+const useSelect = document.getElementById("useSelect");
 
 const choiceArea = document.getElementById("choiceArea");
 const answersContainer = document.getElementById("answersContainer");
@@ -129,13 +130,14 @@ function setTypeUI(){
 function buildQuestionFromForm(){
   const prompt = norm(questionInput.value);
   const type = qTypeSelect.value;
+  const use = (useSelect && useSelect.value) ? useSelect.value : "both";
 
   if (type === "text"){
     const variants = norm(textCorrectInput.value)
       .split(";")
       .map(s => norm(s))
       .filter(Boolean);
-    return { id: uid(), type: "text", prompt, correctText: variants };
+    return { id: uid(), type: "text", prompt, correctText: variants, use };
   }
 
   const rows = [...answersContainer.querySelectorAll(".ans-row")];
@@ -150,6 +152,7 @@ function buildQuestionFromForm(){
     id: uid(),
     type: "choice",
     prompt,
+    use,
     answers: filled.map(a => ({ id:a.id, text:a.text })),
     correct: filled.filter(a => a.correct).map(a => a.id)
   };
@@ -173,6 +176,7 @@ function validateQuestion(q){
 
 function clearQuestionForm(){
   questionInput.value = "";
+  if (useSelect) useSelect.value = "both";
   textCorrectInput.value = "";
   [...answersContainer.querySelectorAll(".ans-row")].forEach(row => {
     row.querySelector('input[type="text"]').value = "";
