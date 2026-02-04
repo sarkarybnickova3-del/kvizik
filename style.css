@@ -1,6 +1,4 @@
-/* =========================
-   Kvízík – rescue verze
-   ========================= */
+
 
 :root{
   --radius: 18px;
@@ -411,3 +409,11 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
   .pill select{ width: 100%; min-width: 0; }
   .btn.coffee{ width: 100%; }
 }
+
+.quiz-actions-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
