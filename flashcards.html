@@ -69,6 +69,43 @@
     </section>
   </main>
 
-  <script defer src="flashcards.js?v=4"></script>
+  <script defer src="flashcards.js?v=5"></script>
+
+  <script>
+    // Fallback: pokud se flashcards.js nespustí nebo nenaplní select, doplníme ho z localStorage.
+    window.__FLASHCARDS_LOADED__ = false;
+    document.addEventListener("DOMContentLoaded", function(){
+      setTimeout(function(){
+        const sel = document.getElementById("quizSelect");
+        if (!sel) return;
+        if (sel.options.length > 0) return;
+
+        try{
+          const raw = localStorage.getItem("kvizik_v2");
+          const data = raw ? JSON.parse(raw) : null;
+          const tests = data && data.tests ? Object.values(data.tests) : [];
+          if (!tests.length){
+            const id = String(Date.now());
+            const s = { theme:"dark", activeTestId:id, tests:{ [id]:{ id, name:"Můj test", questions:[] } } };
+            localStorage.setItem("kvizik_v2", JSON.stringify(s));
+            tests.push(s.tests[id]);
+          }
+          sel.innerHTML = "";
+          tests.forEach(t=>{
+            const o=document.createElement("option");
+            o.value=t.id; o.textContent=t.name;
+            sel.appendChild(o);
+          });
+          sel.selectedIndex = 0;
+          const box = document.getElementById("jsStatus");
+          if (box){
+            box.style.display = "block";
+            box.innerHTML = "Pozn.: select byl prázdný, doplnil jsem ho fallbackem (cache/JS). Teď už to poběží.";
+          }
+        }catch(e){}
+      }, 350);
+    });
+  </script>
+
 </body>
 </html>
