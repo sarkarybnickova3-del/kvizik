@@ -66,6 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderSelect(){
       quizSelect.innerHTML = "";
+      // Safari někdy vykreslí select bez textu, když je moc úzký – viz CSS fix.
+      
       const tests = Object.values(state.tests).sort((a,b)=>a.name.localeCompare(b.name,"cs"));
       if (!tests.length){
         // fallback
@@ -86,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveState(state);
       }
       quizSelect.value = state.activeTestId;
+      if (quizSelect.selectedIndex < 0) quizSelect.selectedIndex = 0;
     }
 
     function answerFor(q){
