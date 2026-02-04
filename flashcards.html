@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kartičky</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="left">
+      <div class="brand">Kartičky</div>
+      <div class="pill">
+        <label class="sr-only" for="quizSelect">Vybrat test</label>
+        <select id="quizSelect"></select>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html">Test</a>
+      <a href="admin.html">Správa</a>
+      <a class="active" href="flashcards.html">Kartičky</a>
+    </nav>
+
+    <div class="right">
+      <button id="themeBtn" class="btn ghost" type="button" title="Světlý / tmavý režim">🌙/☀️</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="row between">
+        <div class="muted" id="counter">0 / 0</div>
+        <div class="row">
+          <button id="shuffleBtn" class="btn" type="button">Zamíchat</button>
+          <button id="resetBtn" class="btn ghost" type="button">Od začátku</button>
+        </div>
+      </div>
+
+      <div class="flip-wrap">
+        <div id="flipCard" class="flip-card" tabindex="0" role="button" aria-label="Otočit kartičku">
+          <div class="flip-inner">
+            <div class="flip-face flip-front">
+              <div class="fc-label">OTÁZKA</div>
+              <div id="frontText" class="fc-text"></div>
+              <div class="fc-hint">Klikni na kartu nebo stiskni Enter pro otočení.</div>
+            </div>
+            <div class="flip-face flip-back">
+              <div class="fc-label">ODPOVĚĎ</div>
+              <div id="backText" class="fc-text"></div>
+              <div class="fc-hint">Klikni znovu pro návrat.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row fc-actions">
+        <button id="flipBtn" class="btn primary" type="button">Otočit</button>
+        <button id="prevBtn" class="btn" type="button">← Předchozí</button>
+        <button id="nextBtn" class="btn" type="button">Další →</button>
+      </div>
+
+      <p class="hint">
+        Kartičky berou otázky z vybraného testu. U výběru z možností se na zadní straně ukážou správné odpovědi.
+      </p>
+    </section>
+  </main>
+
+  <script src="flashcards.js?v=1"></script>
+</body>
+</html>
