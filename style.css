@@ -307,3 +307,15 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
   margin-top: 20px;
 }
 
+.btn.coffee {
+  background: linear-gradient(135deg, #ffdd00, #ffb300);
+  color: #1a1a1a;
+  font-weight: 800;
+  border: none;
+}
+
+.btn.coffee:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
