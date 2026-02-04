@@ -1,3 +1,8 @@
+// app.js — V4 (hardened)
+// Fixy:
+// - jasná hláška do UI, když JS spadne
+// - fallback pro prázdný <select> (kdyby storage byl rozbitý)
+// - pořád: Vyhodnotit + Další, statistika
 
 const STORE_KEY = "kvizik_v2";
 
@@ -159,12 +164,8 @@ document.addEventListener("DOMContentLoaded",()=> {
 
       nextBtn.onclick=()=>{idx++;next();};
 
-      const actions = document.createElement("div");
-actions.className = "quiz-actions-right";
-
-actions.append(evalBtn, nextBtn);
-quizRoot.appendChild(actions);
-
+      row.append(evalBtn,nextBtn);
+      quizRoot.appendChild(row);
     }
 
     function renderChoice(q){

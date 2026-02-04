@@ -1,3 +1,6 @@
+/* =========================
+   Kvízík – rescue verze
+   ========================= */
 
 :root{
   --radius: 18px;
@@ -300,22 +303,111 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
   clip:rect(0,0,0,0); white-space:nowrap; border:0;
 }
 
-.quiz-actions-right {
+
+/* -------------------------
+   Mobile / responsive tweaks
+   ------------------------- */
+
+/* Make header wrap nicely on small screens */
+.topbar{
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.topbar .left{
+  flex: 1 1 100%;
+  min-width: 0;
   display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar .nav{
+  flex: 1 1 100%;
+  justify-content: center;
+}
+
+.topbar .right{
+  flex: 1 1 100%;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
 }
 
-.btn.coffee {
-  background: linear-gradient(135deg, #ffdd00, #ffb300);
-  color: #1a1a1a;
-  font-weight: 800;
-  border: none;
+/* Avoid select shrinking to “arrow only” */
+.pill select{
+  min-width: 180px;
+  max-width: 100%;
 }
 
-.btn.coffee:hover {
-  filter: brightness(1.05);
-  transform: translateY(-1px);
+/* Make big blocks stack on mobile */
+@media (max-width: 900px){
+  .container{ padding: 16px; }
 }
 
+/* Phone layout */
+@media (max-width: 720px){
+  .brand{ font-size: 18px; }
+
+  /* nav becomes scrollable pills instead of squishing */
+  .topbar .nav{
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+    gap: 8px;
+  }
+  .topbar .nav a{
+    white-space: nowrap;
+  }
+
+  /* Buttons full width where it makes sense */
+  .row{
+    flex-wrap: wrap;
+  }
+  .row > .btn,
+  .row > input{
+    width: 100%;
+  }
+
+  /* Quiz answer buttons more compact */
+  .answer-grid{
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .answer-btn{
+    padding: 14px 14px;
+  }
+
+  /* Make action buttons align to right but wrap nicely */
+  .quiz-actions-right{
+    justify-content: stretch;
+  }
+  .quiz-actions-right .btn{
+    width: 100%;
+  }
+
+  /* Admin: stack 3 blocks into one column */
+  .admin-grid,
+  .grid-3,
+  .three-cols,
+  .columns-3{
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Cards padding smaller */
+  .card{
+    padding: 14px;
+  }
+
+  /* Inputs */
+  input, select, textarea{
+    font-size: 16px; /* iOS zoom prevention */
+  }
+}
+
+/* Very small phones */
+@media (max-width: 420px){
+  .pill{ width: 100%; }
+  .pill select{ width: 100%; min-width: 0; }
+  .btn.coffee{ width: 100%; }
+}
