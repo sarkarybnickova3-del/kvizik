@@ -1,18 +1,17 @@
-// flashcards.js — V2 (opravena nabídka testů + Umím/Neumím)
-// Deck logika:
-// - Umím: karta se odstraní z balíčku (naučeno)
-// - Neumím: karta se přesune na konec (vrátí se později)
+// flashcards.js — V4 HARDENED
+// Diagnostika + spolehlivé naplnění selectu (když se něco rozbije, uvidíš to na stránce)
 
 const STORE_KEY = "kvizik_v2";
 
 function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
-function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#039;" }[m]));}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",""":"&quot;","'":"&#039;" }[m]));}
 function setTheme(t){ document.documentElement.setAttribute("data-theme", t || "dark"); }
 function norm(s){ return String(s??"").trim().toLowerCase(); }
 
 function loadState(){
   try{
-    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    const raw = localStorage.getItem(STORE_KEY);
+    const s = raw ? JSON.parse(raw) : null;
     if (s && s.tests && Object.keys(s.tests).length) return s;
   }catch{}
   const id = uid();
@@ -33,6 +32,7 @@ function shuffle(arr){
 document.addEventListener("DOMContentLoaded", () => {
   const quizSelect = document.getElementById("quizSelect");
   const themeBtn = document.getElementById("themeBtn");
+  const jsStatus = document.getElementById("jsStatus");
 
   const counter = document.getElementById("counter");
   const learnedBadge = document.getElementById("learnedBadge");
@@ -47,9 +47,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const shuffleBtn = document.getElementById("shuffleBtn");
   const resetBtn = document.getElementById("resetBtn");
 
+  function status(msg){
+    jsStatus.style.display = "block";
+    jsStatus.innerHTML = msg;
+  }
+
   function fatal(msg){
     console.error(msg);
-    frontText.innerHTML = `<div class="note">Chyba: ${escapeHtml(msg)}</div>`;
+    status(`Chyba: <strong>${esc(msg)}</strong><br/>Tip: zkus otevřít <code>flashcards.js</code> v prohlížeči (jestli není 404) a pak ⌘⇧R.`);
+    frontText.innerHTML = `<div class="note">Kartičky se nenačetly.</div>`;
     backText.textContent = "";
   }
 
@@ -57,38 +63,50 @@ document.addEventListener("DOMContentLoaded", () => {
     let state = loadState();
     setTheme(state.theme);
 
-    // deck = jen otázky pro kartičky (use: cards/both) + otevřené se hodí nejvíc
     let deck = [];
     let idx = 0;
     let learned = 0;
 
     function getTest(){ return state.tests[state.activeTestId]; }
 
-    function renderSelect(){
-      quizSelect.innerHTML = "";
-      // Safari někdy vykreslí select bez textu, když je moc úzký – viz CSS fix.
-      
-      const tests = Object.values(state.tests).sort((a,b)=>a.name.localeCompare(b.name,"cs"));
-      if (!tests.length){
-        // fallback
+    function ensureTest(){
+      if (!state.tests || !Object.keys(state.tests).length){
         const id = uid();
         state.tests = { [id]: { id, name:"Můj test", questions:[] } };
         state.activeTestId = id;
         saveState(state);
-        tests.push(state.tests[id]);
       }
+      if (!state.tests[state.activeTestId]){
+        state.activeTestId = Object.keys(state.tests)[0];
+        saveState(state);
+      }
+    }
+
+    function renderSelect(){
+      ensureTest();
+      quizSelect.innerHTML = "";
+      const tests = Object.values(state.tests).sort((a,b)=>a.name.localeCompare(b.name,"cs"));
       for (const t of tests){
         const opt = document.createElement("option");
         opt.value = t.id;
         opt.textContent = t.name;
         quizSelect.appendChild(opt);
       }
-      if (!state.tests[state.activeTestId]){
-        state.activeTestId = tests[0].id;
-        saveState(state);
-      }
       quizSelect.value = state.activeTestId;
       if (quizSelect.selectedIndex < 0) quizSelect.selectedIndex = 0;
+
+      // diagnostika – když by se tohle ukázalo, znamená to že tests jsou prázdné
+      if (quizSelect.options.length === 0){
+        status("Nemám žádné testy – vytvořím defaultní „Můj test“.");
+        const id = uid();
+        state.tests = { [id]: { id, name:"Můj test", questions:[] } };
+        state.activeTestId = id;
+        saveState(state);
+        const opt = document.createElement("option");
+        opt.value = id; opt.textContent = "Můj test";
+        quizSelect.appendChild(opt);
+        quizSelect.value = id;
+      }
     }
 
     function answerFor(q){
@@ -103,12 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function isForCards(q){
-      // default (když starý JSON) = both
       const use = q.use || "both";
       return use === "cards" || use === "both";
     }
 
     function loadDeck(){
+      ensureTest();
       const t = getTest();
       const qs = (t?.questions || []).filter(isForCards);
       deck = [...qs];
@@ -119,12 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderCard(){
-      const t = getTest();
       learnedBadge.textContent = `${learned} umím`;
 
+      const t = getTest();
       if (!deck.length){
         counter.textContent = "0 / 0";
-        frontText.innerHTML = `<div class="note">V testu „${escapeHtml(t?.name || "—")}“ nejsou žádné kartičky. Označ otázky ve Správě jako „Kartičky“ nebo „Obojí“.</div>`;
+        frontText.innerHTML = `<div class="note">V testu „${esc(t?.name || "—")}“ nejsou kartičky.<br/>Ve Správě nastav „Použití: Kartičky“ nebo „Obojí“.</div>`;
         backText.textContent = "";
         knowBtn.disabled = true;
         dontBtn.disabled = true;
@@ -148,7 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function markKnow(){
       if (!deck.length) return;
-      // odebrat kartu
       deck.splice(idx, 1);
       learned++;
       unflip();
@@ -158,11 +175,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function markDontKnow(){
       if (!deck.length) return;
-      // přesun na konec
       const [card] = deck.splice(idx, 1);
       deck.push(card);
       unflip();
-      // idx zůstává stejné (na stejné pozici je teď další karta)
       if (idx >= deck.length) idx = deck.length - 1;
       renderCard();
     }
@@ -194,8 +209,17 @@ document.addEventListener("DOMContentLoaded", () => {
       saveState(state);
     });
 
+    // quick sanity
     renderSelect();
     loadDeck();
+
+    // If select still looks empty, show a hint
+    if (!quizSelect.value || !quizSelect.options.length){
+      status("Pozor: select je prázdný – pravděpodobně se nenačetl <code>flashcards.js</code> nebo je 404.");
+    } else {
+      jsStatus.style.display = "none";
+    }
+
   }catch(e){
     fatal(e?.message || String(e));
   }
