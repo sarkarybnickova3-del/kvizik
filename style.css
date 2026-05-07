@@ -108,6 +108,7 @@ select{
   box-shadow: var(--shadow);
 }
 .block h2{ margin: 0 0 10px; font-size: 18px; }
+.block h3{ margin: 0 0 8px; font-size: 15px; }
 .grid-3{
   display:grid;
   grid-template-columns: 1fr 1.2fr 1.2fr;
@@ -159,6 +160,11 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
 
 .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 .row.between{ justify-content: space-between; }
+.range-grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
 
 .badge{
   border: 1px solid var(--border);
@@ -387,6 +393,7 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
   /* Admin: stack 3 blocks into one column */
   .admin-grid,
   .grid-3,
+  .range-grid,
   .three-cols,
   .columns-3{
     grid-template-columns: 1fr !important;
@@ -416,4 +423,3 @@ input::placeholder{ color: color-mix(in srgb, var(--muted) 80%, transparent); }
   gap: 12px;
   margin-top: 20px;
 }
-

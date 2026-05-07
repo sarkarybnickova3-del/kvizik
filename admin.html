@@ -51,6 +51,25 @@
         <p class="hint">
           Smazání odstraní celý test i otázky. Musí zůstat alespoň jeden test.
         </p>
+
+        <hr />
+
+        <h3>Nastavení rozsahu</h3>
+        <p class="hint">
+          Vyber, které otázky se mají v testu procvičovat. Rozsahy se tvoří automaticky po 25 otázkách až do konce testu.
+        </p>
+
+        <label for="rangeSelect">Blok otázek</label>
+        <select id="rangeSelect"></select>
+
+        <div class="row">
+          <button id="saveRangeBtn" class="btn primary big" type="button">Uložit blok</button>
+          <button id="resetRangeBtn" class="btn ghost big" type="button">Celý test</button>
+        </div>
+
+        <p class="hint" id="rangeHelp">
+          Rozsah se počítá podle pořadí otázek v seznamu.
+        </p>
       </section>
 
       <!-- 2) Přidat otázku -->
@@ -123,6 +142,6 @@
     </div>
   </main>
 
-  <script src="admin.js?v=4"></script>
+  <script src="admin.js?v=5"></script>
 </body>
 </html>

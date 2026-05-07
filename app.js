@@ -4,6 +4,22 @@ const STORE_KEY = "kvizik_v2";
 function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
 function escapeHtml(s){return String(s??"").replace(/[&<>\"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));}
 function norm(s){return String(s??"").trim().toLowerCase();}
+function shuffle(arr){
+  const out=[...arr];
+  for(let i=out.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [out[i],out[j]]=[out[j],out[i]];
+  }
+  return out;
+}
+function getQuestionRange(test){
+  const total=(test?.questions||[]).length;
+  const rawStart=Number(test?.rangeStart);
+  const rawEnd=Number(test?.rangeEnd);
+  const start=Math.min(Math.max(Number.isFinite(rawStart) ? rawStart : 1, 1), Math.max(total, 1));
+  const end=Math.min(Math.max(Number.isFinite(rawEnd) ? rawEnd : total, start), total);
+  return {start,end,total};
+}
 
 function loadState(){
   try{
@@ -75,8 +91,17 @@ document.addEventListener("DOMContentLoaded",()=> {
 
     function start(){
       const t=getTest();
-      pool=[...(t.questions||[])];
+      const {start,end,total:questionCount}=getQuestionRange(t);
+      pool=[...(t.questions||[])].slice(start-1,end);
       wrong=[]; idx=0; total=0; correct=0;
+      if(questionCount>0 && !pool.length){
+        quizRoot.innerHTML = `
+          <h2 class="quiz-title">Vybraný rozsah je prázdný</h2>
+          <p class="quiz-sub">Ve Správě nastav rozsah otázek od 1 do ${questionCount}.</p>
+          <div class="note">Otevři <a href="admin.html">Správu</a> a uprav začátek nebo konec rozsahu.</div>
+        `;
+        return;
+      }
       next();
     }
 
@@ -88,9 +113,10 @@ document.addEventListener("DOMContentLoaded",()=> {
       if(!t){ fatal("Chybí aktivní test. Otevři Správu a vytvoř test."); return; }
 
       if(!pool.length){
+        const {start,end,total:questionCount}=getQuestionRange(t);
         quizRoot.innerHTML = `
           <h2 class="quiz-title">V testu „${escapeHtml(t.name)}“ nejsou otázky</h2>
-          <p class="quiz-sub">Přidej otázky ve Správě.</p>
+          <p class="quiz-sub">${questionCount ? `V rozsahu ${start}–${end} nejsou otázky.` : "Přidej otázky ve Správě."}</p>
           <div class="note">Otevři <a href="admin.html">Správu</a> a přidej otázky.</div>
         `;
         return;
@@ -113,9 +139,13 @@ document.addEventListener("DOMContentLoaded",()=> {
 
       const info=document.createElement("p");
       info.className="quiz-sub";
-      info.textContent = q.type==="choice"
+      const {start,end,total:questionCount}=getQuestionRange(t);
+      const modeText=q.type==="choice"
         ? ((q.correct?.length||0)>1 ? "Více správných odpovědí" : "Jedna správná odpověď")
         : "Otevřená otázka";
+      info.textContent = questionCount
+        ? `${modeText} • rozsah ${start}-${end}`
+        : modeText;
       quizRoot.appendChild(info);
 
       q.type==="choice" ? renderChoice(q) : renderText(q);
@@ -171,8 +201,9 @@ quizRoot.appendChild(actions);
       const sel=new Set();
       const wrap=document.createElement("div");
       wrap.className="answer-grid";
+      const shuffledAnswers=shuffle(q.answers||[]);
 
-      (q.answers||[]).forEach((a,i)=>{
+      shuffledAnswers.forEach((a,i)=>{
         const b=document.createElement("button");
         b.className="answer-btn";
         b.innerHTML=`<span class="letter">${String.fromCharCode(65+i)}</span><span class="txt">${escapeHtml(a.text)}</span>`;

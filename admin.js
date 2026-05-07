@@ -36,6 +36,10 @@ const renameBtn = document.getElementById("renameBtn");
 const newQuizName = document.getElementById("newQuizName");
 const createQuizBtn = document.getElementById("createQuizBtn");
 const deleteQuizBtn = document.getElementById("deleteQuizBtn");
+const rangeSelect = document.getElementById("rangeSelect");
+const saveRangeBtn = document.getElementById("saveRangeBtn");
+const resetRangeBtn = document.getElementById("resetRangeBtn");
+const rangeHelp = document.getElementById("rangeHelp");
 
 const questionInput = document.getElementById("questionInput");
 const qTypeSelect = document.getElementById("qTypeSelect");
@@ -62,12 +66,43 @@ setTheme(state.theme);
 function ensureAtLeastOneTest(){
   if (!state.tests || Object.keys(state.tests).length === 0){
     const id = uid();
-    state.tests = { [id]:{ id, name:"Můj test", questions:[] } };
+    state.tests = { [id]:{ id, name:"Můj test", questions:[], rangeStart:1, rangeEnd:null } };
     state.activeTestId = id;
     saveState(state);
   }
 }
 function getActiveTest(){ return state.tests[state.activeTestId]; }
+function getRangeForTest(test){
+  const total = (test?.questions || []).length;
+  const startRaw = Number(test?.rangeStart);
+  const endRaw = Number(test?.rangeEnd);
+  const start = Math.min(Math.max(Number.isFinite(startRaw) ? startRaw : 1, 1), Math.max(total, 1));
+  const end = Math.min(Math.max(Number.isFinite(endRaw) ? endRaw : total, start), total);
+  return { start, end, total };
+}
+function getRangeBlocks(total){
+  const blocks = [];
+  for (let start = 1; start <= total; start += 25){
+    blocks.push({ start, end: Math.min(start + 24, total) });
+  }
+  return blocks;
+}
+function ensureTestSettings(test){
+  if (!test) return;
+  if (!Number.isFinite(Number(test.rangeStart))) test.rangeStart = 1;
+  if (test.rangeEnd === undefined) test.rangeEnd = null;
+  const { start, end, total } = getRangeForTest(test);
+  if (!total){
+    test.rangeStart = 1;
+    test.rangeEnd = null;
+    return;
+  }
+
+  const matchedBlock = getRangeBlocks(total).find(block => block.start === start && block.end === end);
+  const activeBlock = matchedBlock || getRangeBlocks(total)[0];
+  test.rangeStart = activeBlock.start;
+  test.rangeEnd = activeBlock.end;
+}
 
 function renderSelect(){
   quizSelect.innerHTML = "";
@@ -80,6 +115,7 @@ function renderSelect(){
   }
   quizSelect.value = state.activeTestId;
   renameInput.value = getActiveTest()?.name || "";
+  renderRangeInputs();
 }
 
 function answerRow(letter){
@@ -272,7 +308,7 @@ function createQuiz(){
   if (exists) return alert("Test s tímto názvem už existuje.");
 
   const id = uid();
-  state.tests[id] = { id, name, questions: [] };
+  state.tests[id] = { id, name, questions: [], rangeStart: 1, rangeEnd: null };
   state.activeTestId = id;
 
   newQuizName.value = "";
@@ -301,6 +337,64 @@ function renameQuiz(){
   t.name = name;
   saveState(state);
   renderAll();
+}
+
+function renderRangeInputs(){
+  const t = getActiveTest();
+  if (!t) return;
+
+  ensureTestSettings(t);
+  const { start, end, total } = getRangeForTest(t);
+  const blocks = getRangeBlocks(total);
+
+  rangeSelect.innerHTML = "";
+  if (!total){
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Nejdřív přidej otázky";
+    rangeSelect.appendChild(option);
+    rangeSelect.disabled = true;
+  } else {
+    blocks.forEach(block => {
+      const option = document.createElement("option");
+      option.value = `${block.start}-${block.end}`;
+      option.textContent = `${block.start} až ${block.end}`;
+      rangeSelect.appendChild(option);
+    });
+    rangeSelect.disabled = false;
+    rangeSelect.value = `${start}-${end}`;
+  }
+
+  rangeHelp.textContent = total
+    ? `Aktuálně se bude testovat rozsah ${start} až ${end} z ${total} otázek.`
+    : "Nejdřív přidej otázky. Rozsah se počítá podle pořadí otázek v seznamu.";
+}
+
+function saveRange(){
+  const t = getActiveTest();
+  if (!t) return;
+
+  const total = (t.questions || []).length;
+  if (!total) return alert("Nejdřív přidej otázky.");
+  const [startRaw, endRaw] = String(rangeSelect.value || "").split("-");
+  const start = Number(startRaw);
+  const end = Number(endRaw);
+
+  if (!Number.isInteger(start) || !Number.isInteger(end)) return alert("Vyber platný blok otázek.");
+
+  t.rangeStart = start;
+  t.rangeEnd = end;
+  saveState(state);
+  renderRangeInputs();
+}
+
+function resetRange(){
+  const t = getActiveTest();
+  if (!t) return;
+  t.rangeStart = 1;
+  t.rangeEnd = (t.questions || []).length || null;
+  saveState(state);
+  renderRangeInputs();
 }
 
 function slug(s){
@@ -363,6 +457,7 @@ function importJson(file){
 
       t.name = norm(name || t.name);
       t.questions = questions;
+      ensureTestSettings(t);
       saveState(state);
       renderAll();
       alert("Hotovo. Test byl načten.");
@@ -398,6 +493,8 @@ saveQuestionBtn.addEventListener("click", addQuestion);
 createQuizBtn.addEventListener("click", createQuiz);
 deleteQuizBtn.addEventListener("click", deleteQuiz);
 renameBtn.addEventListener("click", renameQuiz);
+saveRangeBtn.addEventListener("click", saveRange);
+resetRangeBtn.addEventListener("click", resetRange);
 
 exportBtn.addEventListener("click", exportJson);
 importFile.addEventListener("change", (e) => {
@@ -414,6 +511,7 @@ themeBtn.addEventListener("click", () => {
 
 function renderAll(){
   ensureAtLeastOneTest();
+  Object.values(state.tests).forEach(ensureTestSettings);
   renderSelect();
   ensureMinOptions(4);
   setTypeUI();
