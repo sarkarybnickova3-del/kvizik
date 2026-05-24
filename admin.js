@@ -13,6 +13,14 @@ function escapeHtml(str){
 }
 function norm(s){ return String(s ?? "").trim(); }
 function normLower(s){ return String(s ?? "").trim().toLowerCase(); }
+function shuffle(arr){
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 function loadState(){
   const raw = localStorage.getItem(STORE_KEY);
@@ -36,10 +44,12 @@ const renameBtn = document.getElementById("renameBtn");
 const newQuizName = document.getElementById("newQuizName");
 const createQuizBtn = document.getElementById("createQuizBtn");
 const deleteQuizBtn = document.getElementById("deleteQuizBtn");
-const rangeSelect = document.getElementById("rangeSelect");
+const rangeStartInput = document.getElementById("rangeStartInput");
+const rangeEndInput = document.getElementById("rangeEndInput");
 const saveRangeBtn = document.getElementById("saveRangeBtn");
 const resetRangeBtn = document.getElementById("resetRangeBtn");
 const rangeHelp = document.getElementById("rangeHelp");
+const shuffleQuestionsBtn = document.getElementById("shuffleQuestionsBtn");
 
 const questionInput = document.getElementById("questionInput");
 const qTypeSelect = document.getElementById("qTypeSelect");
@@ -80,28 +90,13 @@ function getRangeForTest(test){
   const end = Math.min(Math.max(Number.isFinite(endRaw) ? endRaw : total, start), total);
   return { start, end, total };
 }
-function getRangeBlocks(total){
-  const blocks = [];
-  for (let start = 1; start <= total; start += 25){
-    blocks.push({ start, end: Math.min(start + 24, total) });
-  }
-  return blocks;
-}
 function ensureTestSettings(test){
   if (!test) return;
   if (!Number.isFinite(Number(test.rangeStart))) test.rangeStart = 1;
   if (test.rangeEnd === undefined) test.rangeEnd = null;
   const { start, end, total } = getRangeForTest(test);
-  if (!total){
-    test.rangeStart = 1;
-    test.rangeEnd = null;
-    return;
-  }
-
-  const matchedBlock = getRangeBlocks(total).find(block => block.start === start && block.end === end);
-  const activeBlock = matchedBlock || getRangeBlocks(total)[0];
-  test.rangeStart = activeBlock.start;
-  test.rangeEnd = activeBlock.end;
+  test.rangeStart = start;
+  test.rangeEnd = total ? end : null;
 }
 
 function renderSelect(){
@@ -345,25 +340,13 @@ function renderRangeInputs(){
 
   ensureTestSettings(t);
   const { start, end, total } = getRangeForTest(t);
-  const blocks = getRangeBlocks(total);
 
-  rangeSelect.innerHTML = "";
-  if (!total){
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent = "Nejdřív přidej otázky";
-    rangeSelect.appendChild(option);
-    rangeSelect.disabled = true;
-  } else {
-    blocks.forEach(block => {
-      const option = document.createElement("option");
-      option.value = `${block.start}-${block.end}`;
-      option.textContent = `${block.start} až ${block.end}`;
-      rangeSelect.appendChild(option);
-    });
-    rangeSelect.disabled = false;
-    rangeSelect.value = `${start}-${end}`;
-  }
+  rangeStartInput.value = total ? String(start) : "1";
+  rangeEndInput.value = total ? String(end) : "";
+  rangeStartInput.min = "1";
+  rangeEndInput.min = "1";
+  rangeStartInput.max = String(Math.max(total, 1));
+  rangeEndInput.max = String(Math.max(total, 1));
 
   rangeHelp.textContent = total
     ? `Aktuálně se bude testovat rozsah ${start} až ${end} z ${total} otázek.`
@@ -376,11 +359,13 @@ function saveRange(){
 
   const total = (t.questions || []).length;
   if (!total) return alert("Nejdřív přidej otázky.");
-  const [startRaw, endRaw] = String(rangeSelect.value || "").split("-");
-  const start = Number(startRaw);
-  const end = Number(endRaw);
+  const start = Number(rangeStartInput.value);
+  const end = Number(rangeEndInput.value);
 
-  if (!Number.isInteger(start) || !Number.isInteger(end)) return alert("Vyber platný blok otázek.");
+  if (!Number.isInteger(start) || !Number.isInteger(end)) return alert("Zadej celé číslo pro začátek i konec.");
+  if (start < 1 || end < 1) return alert("Rozsah musí začínat od 1.");
+  if (start > end) return alert("Začátek rozsahu nemůže být větší než konec.");
+  if (start > total || end > total) return alert(`Rozsah musí být mezi 1 a ${total}.`);
 
   t.rangeStart = start;
   t.rangeEnd = end;
@@ -395,6 +380,16 @@ function resetRange(){
   t.rangeEnd = (t.questions || []).length || null;
   saveState(state);
   renderRangeInputs();
+}
+
+function shuffleQuestions(){
+  const t = getActiveTest();
+  if (!t) return;
+  if ((t.questions || []).length < 2) return alert("Pro zamíchání potřebuješ alespoň 2 otázky.");
+
+  t.questions = shuffle(t.questions || []);
+  saveState(state);
+  renderAll();
 }
 
 function slug(s){
@@ -495,6 +490,7 @@ deleteQuizBtn.addEventListener("click", deleteQuiz);
 renameBtn.addEventListener("click", renameQuiz);
 saveRangeBtn.addEventListener("click", saveRange);
 resetRangeBtn.addEventListener("click", resetRange);
+shuffleQuestionsBtn.addEventListener("click", shuffleQuestions);
 
 exportBtn.addEventListener("click", exportJson);
 importFile.addEventListener("change", (e) => {

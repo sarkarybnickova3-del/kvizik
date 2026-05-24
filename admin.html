@@ -56,20 +56,39 @@
 
         <h3>Nastavení rozsahu</h3>
         <p class="hint">
-          Vyber, které otázky se mají v testu procvičovat. Rozsahy se tvoří automaticky po 25 otázkách až do konce testu.
+          Vyber, které otázky se mají v testu procvičovat. Rozsah si můžeš napsat ručně podle času, který zrovna máš.
         </p>
 
-        <label for="rangeSelect">Blok otázek</label>
-        <select id="rangeSelect"></select>
+        <div class="range-grid">
+          <div>
+            <label for="rangeStartInput">Od otázky</label>
+            <input id="rangeStartInput" type="number" min="1" step="1" placeholder="1" />
+          </div>
+          <div>
+            <label for="rangeEndInput">Do otázky</label>
+            <input id="rangeEndInput" type="number" min="1" step="1" placeholder="25" />
+          </div>
+        </div>
 
         <div class="row">
-          <button id="saveRangeBtn" class="btn primary big" type="button">Uložit blok</button>
+          <button id="saveRangeBtn" class="btn primary big" type="button">Uložit rozsah</button>
           <button id="resetRangeBtn" class="btn ghost big" type="button">Celý test</button>
         </div>
 
         <p class="hint" id="rangeHelp">
           Rozsah se počítá podle pořadí otázek v seznamu.
         </p>
+
+        <hr />
+
+        <h3>Pořadí otázek</h3>
+        <p class="hint">
+          Tohle tlačítko promíchá otázky v aktuálním testu. Hodí se, když nechceš mít pořád stejné pořadí.
+        </p>
+
+        <div class="row">
+          <button id="shuffleQuestionsBtn" class="btn big" type="button">🔀 Zamíchat otázky</button>
+        </div>
       </section>
 
       <!-- 2) Přidat otázku -->
@@ -142,6 +161,6 @@
     </div>
   </main>
 
-  <script src="admin.js?v=5"></script>
+  <script src="admin.js?v=6"></script>
 </body>
 </html>
